@@ -1,0 +1,7 @@
+[
+{
+  "directory": "C:/Users/Jeremy/Documents/PlatformIO/Projects/211128-111757-esp32dev/build",
+  "command": "\"C:/Program Files/mingw-w64/x86_64-8.1.0-posix-seh-rt_v6-rev0/mingw64/bin/g++.exe\"   -g -o CMakeFiles/esp32_xyfly.dir/esp32_xyfly.cpp.obj -c C:/Users/Jeremy/Documents/PlatformIO/Projects/211128-111757-esp32dev/esp32_xyfly.cpp",
+  "file": "C:/Users/Jeremy/Documents/PlatformIO/Projects/211128-111757-esp32dev/esp32_xyfly.cpp"
+}
+]

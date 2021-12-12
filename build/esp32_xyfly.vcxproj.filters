@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\Jeremy\Documents\PlatformIO\Projects\211128-111757-esp32dev\esp32_xyfly.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\Jeremy\Documents\PlatformIO\Projects\211128-111757-esp32dev\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{F6BA1DF4-1EDD-3633-A496-F5C2525B94F7}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

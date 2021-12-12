@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+
+.buttoncontainer
+{
+  width: 100%;
+}
+
+.button
+{
+  -webkit-appearance: none;
+  width: 100%;
+  height: 25px;
+  opacity: 0.7;
+  margin: 10px;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
+}
+
+.button:hover
+{
+  opacity: 1;
+}
+
+</style>
+</head>
+<body>
+<h1>XYFLY</h1>
+<h2>Auto Mating Flies</h2>
+<div class="buttoncontainer">
+  <input type="button" value="Configure" id="config_button">
+</div>
+<div class="buttoncontainer">
+  <input type="button" value="Run main" id="run_main_button">
+  <div class="buttoncontainer">
+    <p>Status: <span id="run_main_status"></span></p>
+  </div>
+</div>
+<div class="buttoncontainer">
+  <input type="button" value="Next X" id="next_X_button">
+</div>
+<script>
+var xhr = new XMLHttpRequest();
+var main_button = document.getElementById("run_main_button");
+var output_main = document.getElementById("run_main_status");
+var config_button = document.getElementById("config_button");
+var next_X_button = document.getElementById("next_X_button");
+main_button.onclick = function()
+{
+  if(output_main.innerHTML == "")
+  {
+    output_main.innerHTML = "none";
+  }
+  if(output_main.innerHTML == "none")
+  {
+    output_main.innerHTML = "running";
+    xhr.open("GET", "/run_main?state=runmain", true);
+  }else
+  {
+    output_main.innerHTML = "none";
+    xhr.open("GET", "/run_main?state=gohome", true);
+  }
+  xhr.send();
+}
+config_button.onclick = function()
+{
+  xhr.open("GET", "/config?", true);
+  xhr.send();
+  location.replace("/config");
+}
+next_X_button.onclick = function()
+{
+  xhr.open("GET", "/nextX?state=nextX", true);
+  xhr.send();
+}
+</script>
+</body>
+</html>
