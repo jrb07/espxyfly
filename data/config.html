@@ -34,21 +34,23 @@
   <input type="button" value="Home" id="go_home_button">
 </div>
 <div class="buttoncontainer">
-  <p>Set SSID:<input type="text" id="set_ssid_input" name="set_ssid_input"><span id="set_ssid_status"></span></p>
+  <p>    Set SSID:<input type="text" id="set_ssid_input" name="set_ssid_input"><span id="set_ssid_status"></span></p>
 </div>
 <div class="buttoncontainer">
-  <p>Set password:<input type="password" id="set_pass_input" name="set_pass_input"><span id="set_pass_status"></span><input type="button" value="Ok" id="set_pass_button"></p>
+  <p>Set password:<input type="password" id="set_pass_input" name="set_pass_input"><span id="set_pass_status"></span></p>
+</div>
+<div class="buttoncontainer">
+  <input type="button" value="Ok" id="set_pass_button">
 </div>
 <script>
 var xhr = new XMLHttpRequest();
-var xhr_ = new XMLHttpRequest();
 var set_ssid_input = document.getElementById("set_ssid_input");
 var set_pass_button = document.getElementById("set_pass_button");
 var set_pass_input = document.getElementById("set_pass_input");
 var go_home_button = document.getElementById("go_home_button");
 set_pass_button.onclick = function()
 {
-  xhr.open("GET", "/set_config?state="+ "ssid."+set_ssid_input.value+".pass."+set_pass_input.value, true);
+  xhr.open("GET", "/command?state="+ "ssid."+set_ssid_input.value+".pass."+set_pass_input.value, true);
   xhr.send();
 }
 go_home_button.onclick = function()

@@ -3,9 +3,8 @@
 #define debugln(x) Serial.println(x)
 
 // Command parsing 
+char buffer[512];
 char character; 
-String command;
-char buffer[40];
 
 // Built-In OLED
 #include <Wire.h>
@@ -17,29 +16,38 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 // Stepper variables
 #include <ESP_FlexyStepper.h>
-#define LIMIT_SWITCH_PIN 25
-#define fullLength -198720/2 //length 198720 is in number of steps at 32 so that maximized resolution 198720/2 at 16 198720/4 at 8 /8 at 4 /16 at 2 /32 at 1 etc
-#define segment_len fullLength/9
-#define dirPin_X 12
-#define stepPin_X 14
-#define dirPin_Y 15
-#define stepPin_Y 13
-const int SPEED_IN_STEPS_PER_SECOND = 2000;
-const int ACCELERATION_IN_STEPS_PER_SECOND = 2000;
-const int DECELERATION_IN_STEPS_PER_SECOND = 2000;
-int X_target = 0;
-int Y_target = 0;
-ESP_FlexyStepper stepper_X, stepper_Y;
+#define LIMIT_SWITCH_PIN_X 5
+#define LIMIT_SWITCH_PIN_Y 25
+//198720 is the number of steps to travel a full length at 32 microsteps
+//(198720/1 = 32) (198720/2 = 16) (/4 = 8) (/8 = 4) (/16 = 2) (/32 = 1)
+#define stepDivisor 2
+#define fullLength -198720/stepDivisor
+#define segmentLen fullLength/9
+#define stepPinX 14
+#define dirPinX 12
+#define stepPinY 13
+#define dirPinY 15
+const int SPEED_IN_STEPS_PER_SECOND = 4000;
+const int ACCELERATION_IN_STEPS_PER_SECOND = 4000;
+const int DECELERATION_IN_STEPS_PER_SECOND = 4000;
+int xTarget = 0;
+int yTarget = 0;
+ESP_FlexyStepper stepperX, stepperY;
+//Flag that branches the task loop into the main program task when true
+//In the main program task a for loop moves the steppers to the next
+//  Cell that is requesting to be filled
+bool runningMain = false;
 
 // Pump
 #define pumpRelay 16
 int duration = 1000;
-float pump_rate = 1;//pumping rate in mL/s
+float pumpRate = 1;//pumping rate in mL/s
 bool pumping = false;
 
-// OTA & WiFi * Async web server
+// OTA & WiFi & Async webserver
+
 #include <WiFi.h>
-#include <ESPAsync_WiFiManager.h>              //https://github.com/khoih-prog/ESPAsync_WiFiManager
+#include <ESPAsync_WiFiManager.h> 
 #include <ArduinoJson.h>
 #include <SPIFFS.h>
 #include <ESPmDNS.h>
@@ -51,7 +59,19 @@ AsyncWebServer server(80);
 DNSServer dnsServer;
 String ssid = "";
 String pass = "";
+String apssid = "XYFLYAP";
 
+//ESP-NOW variables
+#include "ESPNowW.h"
+typedef struct struct_message 
+{
+    int ID;
+    int isVial;
+    int isBottle;
+    int isFilled;
+}struct_message;
+struct_message message;
+uint8_t camMACAddress[] = {0x30, 0xC6, 0xF7, 0x04, 0xA8, 0xCC};
 
 // Initialize all the periphreals and BT
 void setup(){initialize_XYFLY();}
@@ -63,8 +83,7 @@ void idle()
 {
   ArduinoOTA.handle();
   dnsServer.processNextRequest();
-  stepper_X.processMovement();
-  stepper_Y.processMovement();
+  if(runningMain){fill_all_empty_vials();}
   delay(10);
 }
 
@@ -75,6 +94,7 @@ void update_status(String updated_status)
   debugln(updated_status);
   debugln();
   display.clearDisplay();
+  delay(100);
   display.setCursor(0, 0);
   display.println(updated_status);
   display.display();
@@ -82,18 +102,15 @@ void update_status(String updated_status)
 
 void go_home()
 {
-  update_status("Running home...");
-  stepper_X.goToLimitAndSetAsHome();
-  stepper_Y.goToLimitAndSetAsHome();
-  X_target = 0;
-  Y_target = 0;
+  update_status("Going home...");
+  move_to_X_Y(0, 0);
 }
 
 void set_home()
 {       
   update_status("Setting home...");
-  stepper_X.setCurrentPositionAsHomeAndStop();
-  stepper_Y.setCurrentPositionAsHomeAndStop();
+  stepperX.setCurrentPositionAsHomeAndStop();
+  stepperY.setCurrentPositionAsHomeAndStop();
 }
 
 void calibrate_pump()
@@ -119,109 +136,58 @@ void toggle_pump()
   }
 }
 
-void pump()
-{//time on is in ms
-  wait_for_steppers();
+void pump(int cell_duration = 0)
+{
   sprintf(buffer, "Dispensing for: %i ms", duration);
   update_status(buffer);
   digitalWrite(pumpRelay, HIGH);
-  delay(duration);
+  if(cell_duration > 0){delay(cell_duration);}else{delay(duration);}
   digitalWrite(pumpRelay, LOW);
-  delay(500);
+}
+
+void fill_all_empty_vials()
+{
+  for (int x = 0; x < 10 ; x++)
+  {
+    for(int y = 0; y < 10 ; y++)
+    {
+      update_status("Revise this fn");
+    }
+  }
 }
 
 void move_to_X_Y(float X_, float Y_)
 {
-  stepper_X.setTargetPositionInSteps(X_);
-  stepper_Y.setTargetPositionInSteps(Y_);
-  X_target = round(X_);
-  Y_target = round(Y_);
-  sprintf(buffer, "Moving to X:%i Y:%i", X_target, Y_target);
-  update_status(buffer);
+  xTarget = round(X_);
+  yTarget = round(Y_);
+  stepperX.setTargetPositionInSteps(xTarget);
+  stepperY.setTargetPositionInSteps(yTarget);
+  sprintf(buffer, "Set stepper target step position [X:%i, Y:%i]", xTarget, yTarget);
+  debugln(buffer);
 }
 
 void move_to_prev_X()
 {
-  float X_ = constrain(X_target-segment_len, fullLength, 0);
-  move_to_X_Y(X_, Y_target);
+  float X_ = constrain(xTarget-segmentLen, fullLength, 0);
+  move_to_X_Y(X_, yTarget);
 }
 
 void move_to_next_X()
 {
-  float X_ = constrain(X_target+segment_len, fullLength, 0);
-  move_to_X_Y(X_, Y_target);
+  float X_ = constrain(xTarget+segmentLen, fullLength, 0);
+  move_to_X_Y(X_, yTarget);
 }
 
 void move_to_prev_Y()
 {
-  float Y_ = constrain(Y_target-segment_len, fullLength, 0);
-  move_to_X_Y(X_target, Y_);
+  float Y_ = constrain(yTarget-segmentLen, fullLength, 0);
+  move_to_X_Y(xTarget, Y_);
 }
 
 void move_to_next_Y()
 {
-  float Y_ = constrain(Y_target+segment_len, fullLength, 0);
-  move_to_X_Y(X_target, Y_);
-}
-
-void run_to_all_Y_positions(bool forward)
-{
-  if(forward)
-  {//dispense in forward direction
-    for (int i = 0; i <= 9; i++)
-    {
-      pump();
-      sprintf(buffer, "Run to Y%d", i);
-      update_status(buffer);
-      move_to_next_Y();
-      wait_for_steppers();
-    }
-  }else
-  {//dispense in reverse direction
-    for (int i = 9; i >= 0; i--)
-    {
-      pump();
-      sprintf(buffer, "Run to Y%d", i);
-      update_status(buffer);
-      move_to_prev_Y();
-      wait_for_steppers();
-    }
-  }
-}
-
-void run_to_all_positions(int num_runs = 1)
-{
-  go_home();
-  bool flip_flop_x = false;
-  bool flip_flop_y = false;
-  for(int x = 0; x < num_runs; x++)
-  {
-    flip_flop_x = !flip_flop_x;
-    if(flip_flop_x)
-    {
-      for (int i = 0; i < 9; i++)
-      {
-        flip_flop_y = !flip_flop_y;
-        sprintf(buffer, "Run to X%d", i);
-        update_status(buffer);
-        run_to_all_Y_positions(flip_flop_y);
-        move_to_next_X();
-        wait_for_steppers();
-      }
-    }else
-    {    
-      for (int i = 9; i < 0; i--)
-      {
-        flip_flop_y = !flip_flop_y;
-        sprintf(buffer, "Run to X%d", i);
-        update_status(buffer);
-        run_to_all_Y_positions(flip_flop_y);
-        move_to_next_X();
-        wait_for_steppers();
-      }
-    }
-  }
-  go_home();
+  float Y_ = constrain(yTarget+segmentLen, fullLength, 0);
+  move_to_X_Y(xTarget, Y_);
 }
 
 bool save_config() 
@@ -254,6 +220,7 @@ bool save_config()
     update_status("Config set");
     // Serialize JSON to file
     if (serializeJson(doc, configFile) == 0) {update_status("Config write fail");}else{update_status("Config written");}
+    configFile.flush();
     configFile.close();
     update_status("Config closed");
     return true;
@@ -312,21 +279,26 @@ bool read_config()
   return true;
 }
 
-void wait_for_steppers(){while(!stepper_X.motionComplete() or !stepper_Y.motionComplete()){debug("Waiting for steppers.");delay(1);vTaskDelay(1);}}
-
 void handle_input(String input)
 {
+    sprintf(buffer, "Input: %s", input.c_str());
+    update_status(buffer);
+    if(input == "reset"){update_status("HARD RESET");delay(1000);ESP.restart();}
+    if(input == "stop"){runningMain = false;stepperX.emergencyStop();stepperY.emergencyStop();}
+    if(input == "stopX"){stepperX.emergencyStop();}
+    if(input == "stopY"){stepperY.emergencyStop();}
     if(input == "gohome"){go_home();}
     if(input == "sethome"){set_home();}
-    if(input == "runmain"){run_to_all_positions();}
+    if(input == "runmain"){runningMain = true;}
+    if(input == "stopmain"){runningMain = false;}
     if(input == "dispense"){toggle_pump();}
-    if(input == "nextX"){move_to_next_X();}
-    if(input == "prevX"){move_to_prev_X();}
-    if(input == "nextY"){move_to_next_Y();}
-    if(input == "prevY"){move_to_prev_Y();}
+    if(input == "right"){stepperX.startJogging(1);}
+    if(input == "left"){stepperX.startJogging(-1);}
+    if(input == "up"){stepperY.startJogging(1);}
+    if(input == "down"){stepperY.startJogging(-1);}
     if(input == "pump1s"){calibrate_pump();}
-    if(input.indexOf("dur") == 0){duration = int((input.substring(input.indexOf(".")+1, input.length()).toFloat())/pump_rate);}
-    if(input.indexOf("cal") == 0){pump_rate = float(input.substring(input.indexOf(".")+1, input.length()).toFloat())/1000;}
+    if(input.indexOf("dur") == 0){duration = int((input.substring(input.indexOf(".")+1, input.length()).toFloat())/pumpRate);}
+    if(input.indexOf("cal") == 0){pumpRate = float(input.substring(input.indexOf(".")+1, input.length()).toFloat())/1000;}
     if(input.indexOf("goX") == 0)
     {
       float goX = input.substring(3, input.indexOf("goY")).toFloat();
@@ -339,14 +311,11 @@ void handle_input(String input)
     }
     if(input.indexOf("ssid.") == 0)
     {
-      debugln("Recevied ssid input");
       String ssid_ = input.substring(input.indexOf("ssid.")+5, input.indexOf(".pass."));
       String pass_ = input.substring(input.indexOf(".pass.")+6, input.length());
-      debugln("SSID:" + ssid_);
-      debugln("Pass:" + pass_);
       ssid = ssid_;
       pass = pass_;
-      initialize_WiFi();
+      initialize_wifi();
     }
 }
 
@@ -368,35 +337,45 @@ void initialize_XYFLY()
   Serial.setTimeout(10000);
   // Begin OLED communication (always first after serial init to avoid errors when updating status)
   initialize_OLED(); 
-  // Set pump pin as output
-  pinMode(pumpRelay, OUTPUT);
   // Start WiFi
-  initialize_WiFi();
+  initialize_wifi();
   // Start OTA service
   initialize_OTA();
   // Setup async web server
-  initialize_Webserver();
+  initialize_webserver();
   // Stepper setup
-  initialize_Steppers();
+  initialize_steppers();
   // Update user
-  if(WiFi.isConnected()){update_status("Connect to" + WiFi.localIP().toString());}
+  if(WiFi.isConnected())
+    {
+      sprintf(buffer, "MAC:%s",  WiFi.macAddress().c_str());
+      update_status(buffer);
+      sprintf(buffer, "IP:%s",  WiFi.localIP().toString().c_str());
+      update_status(buffer);
+    }else
+    {
+      sprintf(buffer, "Wifi:%s IP:%s", apssid.c_str(), WiFi.softAPIP().toString().c_str());
+      update_status(buffer);
+    }
 }
 
-void initialize_Steppers()
+void initialize_steppers()
 {
-  stepper_X.connectToPins(stepPin_X, dirPin_X);
-  stepper_X.setSpeedInStepsPerSecond(SPEED_IN_STEPS_PER_SECOND);
-  stepper_X.setAccelerationInStepsPerSecondPerSecond(ACCELERATION_IN_STEPS_PER_SECOND);
-  stepper_X.setDecelerationInStepsPerSecondPerSecond(DECELERATION_IN_STEPS_PER_SECOND);
-  stepper_X.setDirectionToHome(-1);
-  stepper_X.startAsService();
+  // Set pump pin as output
+  pinMode(pumpRelay, OUTPUT);
+  stepperX.setDirectionToHome(1);
+  stepperX.connectToPins(stepPinX, dirPinX);
+  stepperX.setSpeedInStepsPerSecond(SPEED_IN_STEPS_PER_SECOND);
+  stepperX.setAccelerationInStepsPerSecondPerSecond(ACCELERATION_IN_STEPS_PER_SECOND);
+  stepperX.setDecelerationInStepsPerSecondPerSecond(DECELERATION_IN_STEPS_PER_SECOND);
+  stepperX.startAsService();
+  stepperY.setDirectionToHome(1);
   update_status("X stepper service started");
-  stepper_Y.connectToPins(stepPin_Y, dirPin_Y);
-  stepper_Y.setSpeedInStepsPerSecond(SPEED_IN_STEPS_PER_SECOND);
-  stepper_Y.setAccelerationInStepsPerSecondPerSecond(ACCELERATION_IN_STEPS_PER_SECOND);
-  stepper_Y.setDecelerationInStepsPerSecondPerSecond(DECELERATION_IN_STEPS_PER_SECOND);
-  stepper_Y.setDirectionToHome(-1);
-  stepper_Y.startAsService();
+  stepperY.connectToPins(stepPinY, dirPinY);
+  stepperY.setSpeedInStepsPerSecond(SPEED_IN_STEPS_PER_SECOND);
+  stepperY.setAccelerationInStepsPerSecondPerSecond(ACCELERATION_IN_STEPS_PER_SECOND);
+  stepperY.setDecelerationInStepsPerSecondPerSecond(DECELERATION_IN_STEPS_PER_SECOND);
+  stepperY.startAsService();
   update_status("Y stepper service started");
 }
 
@@ -463,36 +442,31 @@ void initialize_OTA()
   update_status("OTA booted");
 }
 
-void initialize_WiFi()
+void initialize_wifi()
 {
-  if(WiFi.isConnected()){update_status("Wifi already connected!");save_config();return;}
-  if(ssid != "" && pass != ""){save_config();}
+  if(WiFi.isConnected()){update_status("Wifi already connected! Updating config.");save_config();return;}
+  if(ssid != ""){save_config();}
   read_config();
-  WiFi.mode(WIFI_AP);
+  WiFi.mode(WIFI_STA);
+  ESPNow.init();
+  ESPNow.reg_recv_cb(data_receive);
+  ESPNow.add_peer(camMACAddress, 0);
   WiFi.begin(ssid.c_str(), pass.c_str());
   while (WiFi.waitForConnectResult() != WL_CONNECTED)
   {
-    update_status("Connection fail.");
-    update_status("Retry with hardcode.");
-    WiFi.begin("grpRNAi", "puckered1234");
-    while (WiFi.waitForConnectResult() != WL_CONNECTED)
-    {
-      update_status("Default fail! Resetting.");
-      update_status("1...");
-      delay(1000);
-      update_status("2...");
-      delay(1000);
-      update_status("3...");
-      delay(1000);
-      ESP.restart();
-    }
+    update_status("Default fail! Starting AP.");
+    WiFi.mode(WIFI_AP);
+    WiFi.softAP(apssid.c_str());
+    server.begin();
+    update_status("No Wifi - AP started");
+    return;
   }
-  update_status("WiFi connected");
+  update_status("Wifi router connected");
 }
 
-void initialize_Webserver()
+void initialize_webserver()
 {
-  WiFi.softAP("XY-captive");
+  if(WiFi.getMode() == WIFI_MODE_STA){WiFi.softAP(apssid.c_str());}
   dnsServer.start(53, "*", WiFi.softAPIP());
   update_status("DNS server started");
   //On get requests do things
@@ -504,31 +478,24 @@ void initialize_Webserver()
   {
     request->send(SPIFFS, "/config.html", String(), false, processor);
   });
-  server.on("/set_config", HTTP_GET, [](AsyncWebServerRequest *request)
+  server.on("/command", HTTP_GET, [](AsyncWebServerRequest *request)
   {
     String inputValue = request->getParam("state")->value();
-    debugln("/set_config" + inputValue);
-    handle_input(inputValue);
-    request->send(200, "text/plain", "OK");
-  });
-  server.on("/run_main", HTTP_GET, [](AsyncWebServerRequest *request)
-  {
-    String inputValue = request->getParam("state")->value();
-    debugln();
-    debug("/run_main?state=");
-    debugln(inputValue);
-    handle_input(inputValue);
-    request->send(200, "text/plain", "OK");
-  });
-  server.on("/nextX", HTTP_GET, [](AsyncWebServerRequest *request)
-  {
-    String inputValue = request->getParam("state")->value();
-    debugln();
-    debug("/nextX?state=");
-    debugln(inputValue);
     handle_input(inputValue);
     request->send(200, "text/plain", "OK");
   });
   server.begin();
   update_status("Webserver up");
+}
+
+void data_receive(const uint8_t * mac_addr, const uint8_t *incomingData, int len) 
+{
+  memcpy(&message, incomingData, sizeof(message));
+  sprintf(buffer, "Received NOW data from Board: %u\n Size: %u bytes\n isVial: %u\n isBottle: %u\n isFilled: %u\n", message.ID, len, message.isVial, message.isBottle, message.isFilled);
+  debugln(buffer);
+  delay(1);
+  if(message.isVial && !message.isFilled)
+  {
+    pump();
+  }
 }
