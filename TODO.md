@@ -1,4 +1,4 @@
-> Reprint the x-axis mounting plates.
+# Reprint the x-axis mounting plates.
 
 > Reprint the y-axis mounting plates.
 
