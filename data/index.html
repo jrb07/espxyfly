@@ -2,27 +2,30 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <style>
-.dropdown {
+.dropdown 
+{
   float: left;
   overflow: hidden;
 }
-
-.dropdown .dropbtn {
+.dropdown .dropbtn 
+{
   font-size: 16px;
   border: none;
   outline: none;
   color: white;
   padding: 10px 10px;
   background-color: inherit;
-  font: inherit; /* Important for vertical align on mobile phones */
-  margin: 0; /* Important for vertical align on mobile phones */
+  font: inherit;
+  margin: 0; 
 }
-.dropdown-content {
+.dropdown-content 
+{
   float: left;
   padding: 20px;
   height: 50px;
-  margin: 10px;
   display: grid;
   position: absolute;
   background-color: #f9f9f9;
@@ -30,20 +33,28 @@
   left: 0;
   box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
   z-index: 1;
+  font: inherit;
+  margin: 0;
 }
-.row {
+.row 
+{
   float: left;
   width: 100%;
   padding: 10px;
   background-color: #ccc;
   height: 150px;
+  font: inherit;
+  margin: 0;
 }
-.column {
+.column 
+{
   float: left;
   width: 30px;
   padding: 20px;
   background-color: #ccc;
   height: 100px;
+  font: inherit;
+  margin: 0;
 }
 .buttoncontainer
 {
@@ -55,21 +66,26 @@
   width: 33%;
   height: 25px;
   opacity: 0.7;
-  margin: 10px;
   -webkit-transition: .2s;
   transition: opacity .2s;
+  font: inherit;
+  margin: 0;
 }
-
+.feedcontainer
+{
+  float: middle;
+  padding: 20px;
+  font: inherit;
+  margin: 0;
+}
 .textcontainer:hover
 {
   text-emphasis-color: red;
 }
-
 .statuscontainer
 {
   width: 100%;
 }
-
 .button
 {
   float: left;
@@ -81,16 +97,22 @@
   width: 100%;
   height: 25px;
   opacity: 0.7;
-  margin: 20px;
   -webkit-transition: .2s;
   transition: opacity .2s;
+  font: inherit;
+  margin: 0;
 }
-
 .button:hover
 {
   opacity: 1;
 }
-
+.highlighter 
+{
+  background: rgba(0, 255, 0, 0.25);
+  border: 1px dashed #fff;
+  z-index: 1;
+  position: absolute;
+}
 </style>
 </head>
 <body>
@@ -136,159 +158,22 @@
 <div class="buttoncontainer">
   <input type="button" value="Stop ALL" id="stop_button">
 </div>
+
 <div class="buttoncontainer">
-  <input type="button" value="Advanced" id="dropdown_button">
+  <input type="button" value="Capture full vial reference"  id="full_vial_button" >
 </div>
 
 <div class="buttoncontainer">
-  <div class="dropdown" id="dropdown_parent" hidden>
-    <div class="dropdown-content">
-      <div class="header">
-        <h3>Grid Cells</h3>
-        <div class="row">
-          <div class="column">
-            <input type="button" value="90" id="90_button">
-            <input type="button" value="91" id="91_button">
-            <input type="button" value="92" id="92_button">
-            <input type="button" value="93" id="93_button">
-            <input type="button" value="94" id="94_button">
-            <input type="button" value="95" id="95_button">
-            <input type="button" value="96" id="96_button">
-            <input type="button" value="97" id="97_button">
-            <input type="button" value="98" id="98_button">
-            <input type="button" value="99" id="99_button">
-          </div>
-          <div class="column">
-            <input type="button" value="80" id="80_button">
-            <input type="button" value="81" id="81_button">
-            <input type="button" value="82" id="82_button">
-            <input type="button" value="83" id="83_button">
-            <input type="button" value="84" id="84_button">
-            <input type="button" value="85" id="85_button">
-            <input type="button" value="86" id="86_button">
-            <input type="button" value="87" id="87_button">
-            <input type="button" value="88" id="88_button">
-            <input type="button" value="89" id="89_button">
-          </div>
-          <div class="column">
-            <input type="button" value="70" id="70_button">
-            <input type="button" value="71" id="71_button">
-            <input type="button" value="72" id="72_button">
-            <input type="button" value="73" id="73_button">
-            <input type="button" value="74" id="74_button">
-            <input type="button" value="75" id="75_button">
-            <input type="button" value="76" id="76_button">
-            <input type="button" value="77" id="77_button">
-            <input type="button" value="78" id="78_button">
-            <input type="button" value="79" id="79_button">
-          </div>
-          <div class="column">
-            <input type="button" value="60" id="60_button">
-            <input type="button" value="61" id="61_button">
-            <input type="button" value="62" id="62_button">
-            <input type="button" value="63" id="63_button">
-            <input type="button" value="64" id="64_button">
-            <input type="button" value="65" id="65_button">
-            <input type="button" value="66" id="66_button">
-            <input type="button" value="67" id="67_button">
-            <input type="button" value="68" id="68_button">
-            <input type="button" value="69" id="69_button">
-          </div>
-          <div class="column">
-            <input type="button" value="50" id="50_button">
-            <input type="button" value="51" id="51_button">
-            <input type="button" value="52" id="52_button">
-            <input type="button" value="53" id="53_button">
-            <input type="button" value="54" id="54_button">
-            <input type="button" value="55" id="55_button">
-            <input type="button" value="56" id="56_button">
-            <input type="button" value="57" id="57_button">
-            <input type="button" value="58" id="58_button">
-            <input type="button" value="59" id="59_button">
-          </div>
-          <div class="column">
-            <input type="button" value="40" id="40_button">
-            <input type="button" value="41" id="41_button">
-            <input type="button" value="42" id="42_button">
-            <input type="button" value="43" id="43_button">
-            <input type="button" value="44" id="44_button">
-            <input type="button" value="45" id="45_button">
-            <input type="button" value="46" id="46_button">
-            <input type="button" value="47" id="47_button">
-            <input type="button" value="48" id="48_button">
-            <input type="button" value="49" id="49_button">
-          </div>
-          <div class="column">
-            <input type="button" value="30" id="30_button">
-            <input type="button" value="31" id="31_button">
-            <input type="button" value="32" id="32_button">
-            <input type="button" value="33" id="33_button">
-            <input type="button" value="34" id="34_button">
-            <input type="button" value="35" id="35_button">
-            <input type="button" value="36" id="36_button">
-            <input type="button" value="37" id="37_button">
-            <input type="button" value="38" id="38_button">
-            <input type="button" value="39" id="39_button">
-          </div>
-          <div class="column">
-            <input type="button" value="20" id="20_button">
-            <input type="button" value="21" id="21_button">
-            <input type="button" value="22" id="22_button">
-            <input type="button" value="23" id="23_button">
-            <input type="button" value="24" id="24_button">
-            <input type="button" value="25" id="25_button">
-            <input type="button" value="26" id="26_button">
-            <input type="button" value="27" id="27_button">
-            <input type="button" value="28" id="28_button">
-            <input type="button" value="29" id="29_button">
-          </div>
-          <div class="column">
-            <input type="button" value="10" id="10_button">
-            <input type="button" value="11" id="11_button">
-            <input type="button" value="12" id="12_button">
-            <input type="button" value="13" id="13_button">
-            <input type="button" value="14" id="14_button">
-            <input type="button" value="15" id="15_button">
-            <input type="button" value="16" id="16_button">
-            <input type="button" value="17" id="17_button">
-            <input type="button" value="18" id="18_button">
-            <input type="button" value="19" id="19_button">
-          </div>
-          <div class="column">
-            <input type="button" value="00" id="00_button">
-            <input type="button" value="01" id="01_button">
-            <input type="button" value="02" id="02_button">
-            <input type="button" value="03" id="03_button">
-            <input type="button" value="04" id="04_button">
-            <input type="button" value="05" id="05_button">
-            <input type="button" value="06" id="06_button">
-            <input type="button" value="07" id="07_button">
-            <input type="button" value="08" id="08_button">
-            <input type="button" value="09" id="09_button">
-          </div>
-          <div class="statuscontainer">
-            <p>Cell information: 
-              <p> 
-              [x, y] =
-              <span class="textcontainer" id="cell_pos"></span>
-              </p>
-              <p>
-              requestFill =
-              <span class="textcontainer" id="cell_requestFill"></span>
-              </p>
-            <span class="textcontainer"></span>
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <input type="button" value="Capture empty vial reference" id="empty_vial_button">
 </div>
+
+<!-- Import TensorFlow.js library -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js" type="text/javascript"></script> -->
+<!-- Load the coco-ssd model to use to recognize things in images -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script> -->
 
 <script>
 var xhr = new XMLHttpRequest();
-var dropdown_button = document.getElementById("dropdown_button");
-var dropdown_parent = document.getElementById("dropdown_parent");
 var main_button = document.getElementById("run_main_button");
 var stop_main_button = document.getElementById("stop_main_button");
 var stop_button = document.getElementById("stop_button");
@@ -303,26 +188,40 @@ var jog_down_button = document.getElementById("jog_down_button");
 var dispense_button = document.getElementById("dispense_button");
 var stopX_button = document.getElementById("stopX_button");
 var stopY_button = document.getElementById("stopY_button");
+var canvas = document.createElement('canvas');
+var live_view = document.getElementById('live_view');
+var full_button = document.getElementById('full_vial_button');
+var empty_button = document.getElementById('empty_vial_button');
 
-
-dropdown_button.onclick = function(){dropdown_parent.hidden = !dropdown_parent.hidden;}
-main_button.onclick = function()
-{
-  main_status.innerHTML = "Fill target cells";
-  xhr.open("GET", "/command?state=runmain", true);
-  xhr.send();
-}
-stop_main_button.onclick = function()
-{
-  main_status.innerHTML = "Stopping main run";
-  xhr.open("GET", "/command?state=stopmain", true);
-  xhr.send();
-}
 config_button.onclick = function()
 {
   xhr.open("GET", "/config?", true);
   xhr.send();
   location.replace("/config");
+}
+full_button.onclick = function()
+{
+  main_status.innerHTML = "Capturing full vial reference";
+  xhr.open("GET", "/command?state=fullvial", true);
+  xhr.send();
+}
+empty_button.onclick = function()
+{
+  main_status.innerHTML = "Capturing empty vial reference";
+  xhr.open("GET", "/command?state=emptyvial", true);
+  xhr.send();
+}
+main_button.onclick = function()
+{
+  main_status.innerHTML = "Fill all vials";
+  xhr.open("GET", "/command?state=fillall", true);
+  xhr.send();
+}
+stop_main_button.onclick = function()
+{
+  main_status.innerHTML = "Stop all filling operations";
+  xhr.open("GET", "/command?state=stopfillall", true);
+  xhr.send();
 }
 jog_left_button.onclick = function()
 {
@@ -384,6 +283,73 @@ dispense_button.onclick = function()
   xhr.open("GET", "/command?state=dispense", true);
   xhr.send();
 }
+
+// Store the resulting model in the global scope of our app.
+// var model = undefined;
+// cocoSsd.load().then(function (loadedModel) 
+// {
+//   model = loadedModel;
+//   console.log("Modelo loadelo.");
+//   enableCam();
+// });
+// function enableCam() 
+// {
+// canvas.src = 'http://192.168.0.27:81/';
+// if (!model) 
+// {
+//     return;
+// }
+// predictWebcam();
+// }
+
+// var children = [];
+
+// function predictWebcam() 
+// {
+// Now let's start classifying a frame in the stream.
+// canvas.crossorigin = ' ';
+// model.detect(canvas).then(function (predictions) 
+// {
+//     // Remove any highlighting we did previous frame.
+//     for (let i = 0; i < children.length; i++) 
+//     {
+//       live_view.removeChild(children[i]);
+//     }
+//     children.splice(0);
+
+// Now lets loop through predictions and draw them to the live view if
+// they have a high confidence score.
+//   for (let n = 0; n < predictions.length; n++) 
+//   {
+//     console.log(predictions[n].class + ' ' + predictions[n].score);
+//     if (predictions[n].score > 0.55) 
+//     {
+//       const p = document.createElement('p');
+//       p.offsetParent = live_view;
+//       p.innerText = predictions[n].class  + ' - with '
+//           + Math.round(parseFloat(predictions[n].score) * 100)
+//           + '% confidence.';
+//       p.style = 'margin-left: ' + predictions[n].bbox[0] + 'px; margin-top: '
+//           + (predictions[n].bbox[1] - 10) + 'px; width: '
+//           + (predictions[n].bbox[2] - 10) + 'px; top: 0; left: 0;';
+//         live_view.appendChild(p);
+//       children.push(p);
+//       const highlighter = document.createElement('div');
+//       highlighter.offsetParent = live_view;
+//       highlighter.setAttribute('class', 'highlighter');
+//       highlighter.style = 'left: ' + predictions[n].bbox[0] + 'px; top: '
+//           + predictions[n].bbox[1] + 'px; width: '
+//           + predictions[n].bbox[2] + 'px; height: '
+//           + predictions[n].bbox[3] + 'px;';
+//         live_view.appendChild(highlighter);
+//       children.push(highlighter);
+//     }
+// }
+// Call this function again to keep predicting when the browser is ready.
+// window.requestAnimationFrame(predictWebcam);
+// });
+// }
+
 </script>
 </body>
 </html>

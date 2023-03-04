@@ -67,10 +67,10 @@ RM = "C:/Program Files/CMake/bin/cmake.exe" -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = C:/Users/Jeremy/Documents/PlatformIO/Projects/211128-111757-esp32dev
+CMAKE_SOURCE_DIR = C:/Users/Jeremy/Documents/PlatformIO/Projects/espxyfly
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = C:/Users/Jeremy/Documents/PlatformIO/Projects/211128-111757-esp32dev/build
+CMAKE_BINARY_DIR = C:/Users/Jeremy/Documents/PlatformIO/Projects/espxyfly/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -78,7 +78,7 @@ CMAKE_BINARY_DIR = C:/Users/Jeremy/Documents/PlatformIO/Projects/211128-111757-e
 # Special rule for the target package_source
 package_source:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Run CPack packaging tool for source..."
-	"C:/Program Files/CMake/bin/cpack.exe" --config ./CPackSourceConfig.cmake C:/Users/Jeremy/Documents/PlatformIO/Projects/211128-111757-esp32dev/build/CPackSourceConfig.cmake
+	"C:/Program Files/CMake/bin/cpack.exe" --config ./CPackSourceConfig.cmake C:/Users/Jeremy/Documents/PlatformIO/Projects/espxyfly/build/CPackSourceConfig.cmake
 .PHONY : package_source
 
 # Special rule for the target package_source
@@ -132,9 +132,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start C:/Users/Jeremy/Documents/PlatformIO/Projects/211128-111757-esp32dev/build/CMakeFiles C:/Users/Jeremy/Documents/PlatformIO/Projects/211128-111757-esp32dev/build//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start C:/Users/Jeremy/Documents/PlatformIO/Projects/espxyfly/build/CMakeFiles C:/Users/Jeremy/Documents/PlatformIO/Projects/espxyfly/build//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start C:/Users/Jeremy/Documents/PlatformIO/Projects/211128-111757-esp32dev/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start C:/Users/Jeremy/Documents/PlatformIO/Projects/espxyfly/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -527,44 +527,44 @@ ContinuousCoverage/fast:
 .PHONY : ContinuousCoverage/fast
 
 #=============================================================================
-# Target rules for targets named esp32_xyfly
+# Target rules for targets named xyfly_cam
 
 # Build rule for target.
-esp32_xyfly: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 esp32_xyfly
-.PHONY : esp32_xyfly
+xyfly_cam: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 xyfly_cam
+.PHONY : xyfly_cam
 
 # fast build rule for target.
-esp32_xyfly/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/esp32_xyfly.dir/build.make CMakeFiles/esp32_xyfly.dir/build
-.PHONY : esp32_xyfly/fast
+xyfly_cam/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/xyfly_cam.dir/build.make CMakeFiles/xyfly_cam.dir/build
+.PHONY : xyfly_cam/fast
 
-esp32_xyfly.obj: esp32_xyfly.cpp.obj
+xyfly_cam.obj: xyfly_cam.cpp.obj
 
-.PHONY : esp32_xyfly.obj
+.PHONY : xyfly_cam.obj
 
 # target to build an object file
-esp32_xyfly.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/esp32_xyfly.dir/build.make CMakeFiles/esp32_xyfly.dir/esp32_xyfly.cpp.obj
-.PHONY : esp32_xyfly.cpp.obj
+xyfly_cam.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/xyfly_cam.dir/build.make CMakeFiles/xyfly_cam.dir/xyfly_cam.cpp.obj
+.PHONY : xyfly_cam.cpp.obj
 
-esp32_xyfly.i: esp32_xyfly.cpp.i
+xyfly_cam.i: xyfly_cam.cpp.i
 
-.PHONY : esp32_xyfly.i
+.PHONY : xyfly_cam.i
 
 # target to preprocess a source file
-esp32_xyfly.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/esp32_xyfly.dir/build.make CMakeFiles/esp32_xyfly.dir/esp32_xyfly.cpp.i
-.PHONY : esp32_xyfly.cpp.i
+xyfly_cam.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/xyfly_cam.dir/build.make CMakeFiles/xyfly_cam.dir/xyfly_cam.cpp.i
+.PHONY : xyfly_cam.cpp.i
 
-esp32_xyfly.s: esp32_xyfly.cpp.s
+xyfly_cam.s: xyfly_cam.cpp.s
 
-.PHONY : esp32_xyfly.s
+.PHONY : xyfly_cam.s
 
 # target to generate assembly for a file
-esp32_xyfly.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/esp32_xyfly.dir/build.make CMakeFiles/esp32_xyfly.dir/esp32_xyfly.cpp.s
-.PHONY : esp32_xyfly.cpp.s
+xyfly_cam.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/xyfly_cam.dir/build.make CMakeFiles/xyfly_cam.dir/xyfly_cam.cpp.s
+.PHONY : xyfly_cam.cpp.s
 
 # Help Target
 help:
@@ -605,10 +605,10 @@ help:
 	@echo "... NightlySubmit"
 	@echo "... NightlyTest"
 	@echo "... NightlyUpdate"
-	@echo "... esp32_xyfly"
-	@echo "... esp32_xyfly.obj"
-	@echo "... esp32_xyfly.i"
-	@echo "... esp32_xyfly.s"
+	@echo "... xyfly_cam"
+	@echo "... xyfly_cam.obj"
+	@echo "... xyfly_cam.i"
+	@echo "... xyfly_cam.s"
 .PHONY : help
 
 

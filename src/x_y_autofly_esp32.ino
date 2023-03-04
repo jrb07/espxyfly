@@ -33,22 +33,19 @@ const int DECELERATION_IN_STEPS_PER_SECOND = 4000;
 int xTarget = 0;
 int yTarget = 0;
 ESP_FlexyStepper stepperX, stepperY;
-//Flag that branches the task loop into the main program task when true
-//In the main program task a for loop moves the steppers to the next
-//  Cell that is requesting to be filled
-bool runningMain = false;
 
 // Pump
 #define pumpRelay 16
 int duration = 1000;
 float pumpRate = 1;//pumping rate in mL/s
 bool pumping = false;
+bool fillAll = false;
 
 // OTA & WiFi & Async webserver
-
 #include <WiFi.h>
 #include <ESPAsync_WiFiManager.h> 
 #include <ArduinoJson.h>
+#include <HTTPClient.h>
 #include <SPIFFS.h>
 #include <ESPmDNS.h>
 #include <WiFiUdp.h>
@@ -61,17 +58,8 @@ String ssid = "";
 String pass = "";
 String apssid = "XYFLYAP";
 
-//ESP-NOW variables
-#include "ESPNowW.h"
-typedef struct struct_message 
-{
-    int ID;
-    int isVial;
-    int isBottle;
-    int isFilled;
-}struct_message;
-struct_message message;
-uint8_t camMACAddress[] = {0x30, 0xC6, 0xF7, 0x04, 0xA8, 0xCC};
+// Timer functions to keep up with various asynchronous tasks
+int timer0 = 0;
 
 // Initialize all the periphreals and BT
 void setup(){initialize_XYFLY();}
@@ -83,18 +71,25 @@ void idle()
 {
   ArduinoOTA.handle();
   dnsServer.processNextRequest();
-  if(runningMain){fill_all_empty_vials();}
-  delay(10);
+  delay(1);
+  //increment the timer to keep up with clearing the screen occasionally
+  timer0++;
+  if(timer0 >= 2000)
+  {
+    timer0 = 0;
+    display.clearDisplay();
+    display.drawTriangle(0, 0, 4, 4, 6, 6, 255);
+    delay(1000);
+    display.clearDisplay();
+  }
 }
 
 void update_status(String updated_status)
 {
-  debugln();
-  debug("STATUS UPDATE: ");
-  debugln(updated_status);
+  debugln("STATUS UPDATE: ");
+  debug(updated_status);
   debugln();
   display.clearDisplay();
-  delay(100);
   display.setCursor(0, 0);
   display.println(updated_status);
   display.display();
@@ -136,30 +131,21 @@ void toggle_pump()
   }
 }
 
-void pump(int cell_duration = 0)
+void pump(int _duration = 0)
 {
-  sprintf(buffer, "Dispensing for: %i ms", duration);
+  //if no custom duration is sent then set custom duration to default duration
+  if(_duration <= 0){_duration = duration;}
+  sprintf(buffer, "Dispensing for: %i ms", _duration);
   update_status(buffer);
   digitalWrite(pumpRelay, HIGH);
-  if(cell_duration > 0){delay(cell_duration);}else{delay(duration);}
+  delay(_duration);
   digitalWrite(pumpRelay, LOW);
 }
 
-void fill_all_empty_vials()
+void move_to_X_Y(float _x, float _y)
 {
-  for (int x = 0; x < 10 ; x++)
-  {
-    for(int y = 0; y < 10 ; y++)
-    {
-      update_status("Revise this fn");
-    }
-  }
-}
-
-void move_to_X_Y(float X_, float Y_)
-{
-  xTarget = round(X_);
-  yTarget = round(Y_);
+  xTarget = round(_x);
+  yTarget = round(_y);
   stepperX.setTargetPositionInSteps(xTarget);
   stepperY.setTargetPositionInSteps(yTarget);
   sprintf(buffer, "Set stepper target step position [X:%i, Y:%i]", xTarget, yTarget);
@@ -283,23 +269,25 @@ void handle_input(String input)
 {
     sprintf(buffer, "Input: %s", input.c_str());
     update_status(buffer);
-    if(input == "reset"){update_status("HARD RESET");delay(1000);ESP.restart();}
-    if(input == "stop"){runningMain = false;stepperX.emergencyStop();stepperY.emergencyStop();}
-    if(input == "stopX"){stepperX.emergencyStop();}
-    if(input == "stopY"){stepperY.emergencyStop();}
-    if(input == "gohome"){go_home();}
-    if(input == "sethome"){set_home();}
-    if(input == "runmain"){runningMain = true;}
-    if(input == "stopmain"){runningMain = false;}
-    if(input == "dispense"){toggle_pump();}
-    if(input == "right"){stepperX.startJogging(1);}
-    if(input == "left"){stepperX.startJogging(-1);}
-    if(input == "up"){stepperY.startJogging(1);}
-    if(input == "down"){stepperY.startJogging(-1);}
-    if(input == "pump1s"){calibrate_pump();}
-    if(input.indexOf("dur") == 0){duration = int((input.substring(input.indexOf(".")+1, input.length()).toFloat())/pumpRate);}
-    if(input.indexOf("cal") == 0){pumpRate = float(input.substring(input.indexOf(".")+1, input.length()).toFloat())/1000;}
-    if(input.indexOf("goX") == 0)
+    if(input == "reset"){update_status("HARD RESET");delay(1000);ESP.restart();}//hard reset
+    if(input == "stop"){fillAll = false;stepperX.emergencyStop();stepperY.emergencyStop();}//emergency stop all operations
+    if(input == "stopX"){stepperX.emergencyStop();}//emergency stop for x stepper
+    if(input == "stopY"){stepperY.emergencyStop();}//emergency stop for y stepper
+    if(input == "gohome"){go_home();}//go to 0,0
+    if(input == "sethome"){set_home();}//set the current position as 0,0
+    if(input == "fillall"){fillAll = true;}//enable async fill operations
+    if(input == "stopfillall"){fillAll = false;}//halt the async fill operations
+    if(input == "dispense"){toggle_pump();}//turn the pump on/off
+    if(input == "right"){stepperX.startJogging(1);}//move x stepper in positive direction
+    if(input == "left"){stepperX.startJogging(-1);}//move x stepper in negative direction
+    if(input == "up"){stepperY.startJogging(1);}//move y stepper in positive direction
+    if(input == "down"){stepperY.startJogging(-1);}//move y stepper in negative direction
+    if(input == "pump1s"){calibrate_pump();}//activate the pump for one second
+    if(input == "fullvial"){}//capture a full vial reference image
+    if(input == "emptyvial"){}//capture an empty vial reference image
+    if(input.indexOf("dur") == 0){duration = int((input.substring(input.indexOf(".")+1, input.length()).toFloat())/pumpRate);}//set duration of pump on to achieve desired output volume with current pump rate
+    if(input.indexOf("cal") == 0){pumpRate = float(input.substring(input.indexOf(".")+1, input.length()).toFloat())/1000;}//calibrate pump rate with user input
+    if(input.indexOf("goX") == 0)//go to position x, y
     {
       float goX = input.substring(3, input.indexOf("goY")).toFloat();
       goX = goX/100;
@@ -309,27 +297,25 @@ void handle_input(String input)
       goY = goY*fullLength;
       move_to_X_Y(goX, goY);
     }
-    if(input.indexOf("ssid.") == 0)
+    if(input.indexOf("ssid.") == 0)//configure the wifi
     {
       String ssid_ = input.substring(input.indexOf("ssid.")+5, input.indexOf(".pass."));
       String pass_ = input.substring(input.indexOf(".pass.")+6, input.length());
       ssid = ssid_;
       pass = pass_;
-      initialize_wifi();
+      save_config();
+      if(!WiFi.isConnected()){initialize_wifi();}
     }
 }
 
-// Can replace placeholder with variable from the esp32
+// Does nothing right now just a callback fn
 String processor(const String& var)
 {
-  // if (var == "current_ssid_status")
-  // {
-  //   return ssid;
-  // }
+  debugln("Processor fn received string: " + var);
   return String();
 }
 
-//Initialize function that starts serial connections sets pin modes etc...
+//Main initialize function that starts serial connections sets pin modes etc...
 void initialize_XYFLY()
 {
   // Start and init serial connection
@@ -345,18 +331,17 @@ void initialize_XYFLY()
   initialize_webserver();
   // Stepper setup
   initialize_steppers();
-  // Update user
+  // Update user about wifi
+  sprintf(buffer, "MAC:%s",  WiFi.macAddress().c_str());
+  debugln(buffer);
   if(WiFi.isConnected())
-    {
-      sprintf(buffer, "MAC:%s",  WiFi.macAddress().c_str());
-      update_status(buffer);
-      sprintf(buffer, "IP:%s",  WiFi.localIP().toString().c_str());
-      update_status(buffer);
-    }else
-    {
-      sprintf(buffer, "Wifi:%s IP:%s", apssid.c_str(), WiFi.softAPIP().toString().c_str());
-      update_status(buffer);
-    }
+  {
+    sprintf(buffer, "IP:%s",  WiFi.localIP().toString().c_str());
+  }else
+  {
+    sprintf(buffer, "Wifi:%s IP:%s", apssid.c_str(), WiFi.softAPIP().toString().c_str());
+  }
+  update_status(buffer);
 }
 
 void initialize_steppers()
@@ -384,23 +369,10 @@ void initialize_OLED()
   Wire.begin(5, 4);
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C, false, false)) {debugln(F("SSD1306 allocation failed"));for(;;);}else
   {
-    // Clear the buffer.  
-    display.clearDisplay();
-    display.setCursor(0, 0);
-    display.setTextSize(4);
-    display.setTextColor(WHITE);
-    update_status("OLED up");
-    delay(1000);
-    display.clearDisplay();
-    display.setCursor(0, 0);
-    update_status("Welcome");
-    delay(1000);
-    display.clearDisplay();
-    display.setCursor(0, 0);
-    update_status("XYFLY BETA");
-    delay(1000);
     display.setTextSize(2);
     display.setTextColor(WHITE);
+    // Clear the buffer.  
+    update_status("XYFLY BETA");
   }
 }
 
@@ -416,7 +388,8 @@ void initialize_OTA()
       else // U_SPIFFS
         type = "filesystem";
       // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-      update_status("OTA update of type: " + type);
+      SPIFFS.end();
+      update_status("OTA: " + type);
       debugln("OTA update of type: " + type);
     })
     .onEnd([]() 
@@ -425,7 +398,7 @@ void initialize_OTA()
     })
     .onProgress([](unsigned int progress, unsigned int total) 
     {
-      sprintf(buffer, "Progress: %u%%\r", (progress / (total / 100)));
+      sprintf(buffer, "Update    Progress: %u%%\r", (progress / (total / 100)));
       update_status(buffer);
       Serial.printf(buffer);
     })
@@ -444,38 +417,31 @@ void initialize_OTA()
 
 void initialize_wifi()
 {
-  if(WiFi.isConnected()){update_status("Wifi already connected! Updating config.");save_config();return;}
-  if(ssid != ""){save_config();}
   read_config();
-  WiFi.mode(WIFI_STA);
-  ESPNow.init();
-  ESPNow.reg_recv_cb(data_receive);
-  ESPNow.add_peer(camMACAddress, 0);
+  WiFi.mode(WIFI_AP_STA);
+  WiFi.softAP(apssid.c_str());
   WiFi.begin(ssid.c_str(), pass.c_str());
-  while (WiFi.waitForConnectResult() != WL_CONNECTED)
+  int i = 0;
+  while (WiFi.status() != WL_CONNECTED) 
   {
-    update_status("Default fail! Starting AP.");
-    WiFi.mode(WIFI_AP);
-    WiFi.softAP(apssid.c_str());
-    server.begin();
-    update_status("No Wifi - AP started");
-    return;
+    delay(1000);
+    debug(".");
+    i++;
+    if(i>10){break;}
   }
-  update_status("Wifi router connected");
 }
 
 void initialize_webserver()
 {
-  if(WiFi.getMode() == WIFI_MODE_STA){WiFi.softAP(apssid.c_str());}
   dnsServer.start(53, "*", WiFi.softAPIP());
   update_status("DNS server started");
   //On get requests do things
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
-  {
+  {//uses the spiffs, sends the index.html on /, sends resulting the html code to the processor function
     request->send(SPIFFS, "/index.html", String(), false, processor);
   });
   server.on("/config", HTTP_GET, [](AsyncWebServerRequest *request)
-  {
+  {//uses the spiffs, sends the config.html on /, sends the resulting html code to the processor function
     request->send(SPIFFS, "/config.html", String(), false, processor);
   });
   server.on("/command", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -486,16 +452,4 @@ void initialize_webserver()
   });
   server.begin();
   update_status("Webserver up");
-}
-
-void data_receive(const uint8_t * mac_addr, const uint8_t *incomingData, int len) 
-{
-  memcpy(&message, incomingData, sizeof(message));
-  sprintf(buffer, "Received NOW data from Board: %u\n Size: %u bytes\n isVial: %u\n isBottle: %u\n isFilled: %u\n", message.ID, len, message.isVial, message.isBottle, message.isFilled);
-  debugln(buffer);
-  delay(1);
-  if(message.isVial && !message.isFilled)
-  {
-    pump();
-  }
 }
