@@ -84,6 +84,7 @@ void idle()
   }
 }
 
+//Function that takes in a String and then outputs that String to all displays in this project
 void update_status(String updated_status)
 {
   debugln("STATUS UPDATE: ");
@@ -95,12 +96,14 @@ void update_status(String updated_status)
   display.display();
 }
 
+//Tell both steppers to go to the Home position or x = 0 and y = 0
 void go_home()
 {
   update_status("Going home...");
   move_to_X_Y(0, 0);
 }
 
+//Set the current position as the Home position (x = 0, y = 0)
 void set_home()
 {       
   update_status("Setting home...");
@@ -108,6 +111,7 @@ void set_home()
   stepperY.setCurrentPositionAsHomeAndStop();
 }
 
+//Use a specified amount of ON time to calibrate the amount of fluid dispensed in that time period
 void calibrate_pump()
 {
   digitalWrite(pumpRelay, HIGH);
@@ -115,6 +119,7 @@ void calibrate_pump()
   digitalWrite(pumpRelay, LOW);
 }
 
+//Turn the pump on if it off and off if it is on
 void toggle_pump()
 {
   if(pumping)
@@ -131,6 +136,7 @@ void toggle_pump()
   }
 }
 
+//Turn the pump on for a specified amount of time or default to the default amount of time
 void pump(int _duration = 0)
 {
   //if no custom duration is sent then set custom duration to default duration
@@ -142,6 +148,7 @@ void pump(int _duration = 0)
   digitalWrite(pumpRelay, LOW);
 }
 
+//Move steppers to a specific point within the limits of the x and y axes
 void move_to_X_Y(float _x, float _y)
 {
   xTarget = round(_x);
@@ -152,30 +159,35 @@ void move_to_X_Y(float _x, float _y)
   debugln(buffer);
 }
 
+//Move to the previous x position
 void move_to_prev_X()
 {
   float X_ = constrain(xTarget-segmentLen, fullLength, 0);
   move_to_X_Y(X_, yTarget);
 }
 
+//Move to the next x position
 void move_to_next_X()
 {
   float X_ = constrain(xTarget+segmentLen, fullLength, 0);
   move_to_X_Y(X_, yTarget);
 }
 
+//Move to the previous y position
 void move_to_prev_Y()
 {
   float Y_ = constrain(yTarget-segmentLen, fullLength, 0);
   move_to_X_Y(xTarget, Y_);
 }
 
+//Move to the next y position
 void move_to_next_Y()
 {
   float Y_ = constrain(yTarget+segmentLen, fullLength, 0);
   move_to_X_Y(xTarget, Y_);
 }
 
+//Save the current WiFi config values in the local SPIFFS system
 bool save_config() 
 {
   update_status("Saving config...");
@@ -217,6 +229,7 @@ bool save_config()
   }
 }
 
+//Read the config from the SPIFFS filesystem
 bool read_config()
 {
   update_status("Reading config...");
@@ -265,6 +278,7 @@ bool read_config()
   return true;
 }
 
+//Switch on a String value to control logic flow through the web based UI
 void handle_input(String input)
 {
     sprintf(buffer, "Input: %s", input.c_str());
@@ -344,6 +358,7 @@ void initialize_XYFLY()
   update_status(buffer);
 }
 
+//Setup for the x and y steppers
 void initialize_steppers()
 {
   // Set pump pin as output
@@ -364,6 +379,7 @@ void initialize_steppers()
   update_status("Y stepper service started");
 }
 
+//Setup for the OLED
 void initialize_OLED()
 {
   Wire.begin(5, 4);
@@ -376,6 +392,7 @@ void initialize_OLED()
   }
 }
 
+//Setup the over the air (OTA) update functionality
 void initialize_OTA()
 {
   update_status("Booting OTA");
@@ -415,6 +432,7 @@ void initialize_OTA()
   update_status("OTA booted");
 }
 
+//Setup the WiFi
 void initialize_wifi()
 {
   read_config();
@@ -431,6 +449,7 @@ void initialize_wifi()
   }
 }
 
+//Setup the webserver which will be used as the user interface
 void initialize_webserver()
 {
   dnsServer.start(53, "*", WiFi.softAPIP());
