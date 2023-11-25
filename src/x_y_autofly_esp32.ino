@@ -2,11 +2,11 @@
 #define debug(x) Serial.print(x)
 #define debugln(x) Serial.println(x)
 
-// Command parsing 
+// Command parsing variables 
 char buffer[512];
 char character; 
 
-// Built-In OLED
+// OLED capability variables
 bool useScreen = false;
 #include <Wire.h>
 #include <Adafruit_GFX.h>
@@ -15,7 +15,7 @@ bool useScreen = false;
 #define SCREEN_HEIGHT 64
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
-// Stepper variables
+// Stepper associated variables
 #include <ESP_FlexyStepper.h>
 #define LIMIT_SWITCH_PIN_X 5
 #define LIMIT_SWITCH_PIN_Y 25
@@ -165,6 +165,7 @@ void pump(int _duration = 0)
   delay(_duration);
   digitalWrite(pumpRelay, LOW);
 }
+
 void handleWifi(String input)
 {
   String ssid_ = input.substring(input.indexOf("ssid.")+5, input.indexOf(".pass."));
@@ -174,6 +175,7 @@ void handleWifi(String input)
   save_config();
   if(!WiFi.isConnected()){initialize_wifi();}
 }
+
 void parseXY(String input)
 {
   float goX = input.substring(3, input.indexOf("goY")).toFloat();
@@ -184,6 +186,7 @@ void parseXY(String input)
   goY = goY*fullLength;
   move_to_X_Y(goX, goY);
 }
+
 //Move steppers to a specific point within the limits of the x and y axes
 void move_to_X_Y(float _x, float _y)
 {
