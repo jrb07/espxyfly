@@ -1,12 +1,7 @@
-# Reprint the x-axis mounting plates
+## Reprint all components after integrating aluminum extrusion and linear rail to the x-axis
+    Done
 
-## Reprint the y-axis mounting plates
-
-## Reprint the x-chassis
-
-## Reprint the y-chassis
-
-### Increase the bore size with the threaded follower nut to fit maybe by 0.1 mm
+## Add functionality for a joystick to move the target position like in a crane machine and pressing the stick in will dispense
 
 ## Generate a dataset with at least 100 false and at least 100 positive images for training a simple classifier
 

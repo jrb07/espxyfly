@@ -7,6 +7,7 @@ char buffer[512];
 char character; 
 
 // Built-In OLED
+bool useScreen = false;
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
@@ -19,15 +20,19 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 #define LIMIT_SWITCH_PIN_X 5
 #define LIMIT_SWITCH_PIN_Y 25
 //198720 is the number of steps to travel a full length at 32 microsteps
-//(198720/1 = 32) (198720/2 = 16) (/4 = 8) (/8 = 4) (/16 = 2) (/32 = 1)
-#define stepDivisor 2
-#define fullLength -198720/stepDivisor
-#define segmentLen fullLength/9
+//To calculate the stepDivisor take the microStep and divide by the max microStep (32) for example:
+//    (32/microStep = stepDivisor)
+//    (32/2 = 16) (32/4 = 8) (32/8 = 4) (32/16 = 2) (32/32 = 1)
+int microStep = 16;
+int stepDivisor = 32/microStep;
+int fullLength = 198720/stepDivisor;
+int numSubdivisions = 10;
+int segmentLen = fullLength/(numSubdivisions-1);
 #define stepPinX 14
 #define dirPinX 12
 #define stepPinY 13
 #define dirPinY 15
-const int SPEED_IN_STEPS_PER_SECOND = 4000;
+int SPEED_IN_STEPS_PER_SECOND = 4000;
 const int ACCELERATION_IN_STEPS_PER_SECOND = 4000;
 const int DECELERATION_IN_STEPS_PER_SECOND = 4000;
 int xTarget = 0;
@@ -72,16 +77,19 @@ void idle()
   ArduinoOTA.handle();
   dnsServer.processNextRequest();
   delay(1);
-  //increment the timer to keep up with clearing the screen occasionally
-  timer0++;
-  if(timer0 >= 2000)
+  //if the screen is in use then incremement a timer to clear the screen
+  if(useScreen)
   {
-    timer0 = 0;
-    display.clearDisplay();
-    display.drawTriangle(0, 0, 4, 4, 6, 6, 255);
-    delay(1000);
-    display.clearDisplay();
+    //increment the timer to keep up with clearing the screen occasionally
+    timer0++;
+    if(timer0 >= 1000)
+    {
+      timer0 = 0;
+      display.clearDisplay();
+    }
   }
+  // If the main function is being run then fill all vials
+  if(fillAll){fillAllVials();}
 }
 
 //Function that takes in a String and then outputs that String to all displays in this project
@@ -90,10 +98,20 @@ void update_status(String updated_status)
   debugln("STATUS UPDATE: ");
   debug(updated_status);
   debugln();
-  display.clearDisplay();
-  display.setCursor(0, 0);
-  display.println(updated_status);
-  display.display();
+  // If the screen is in use then update the display
+  if(useScreen)
+  {
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.println(updated_status);
+    display.display();
+  }
+}
+
+//Tell the steppers to move to each position and remove each position that has been filled from the list
+void fillAllVials()
+{
+  update_status("Function 'fillAllVials()' not yet defined");
 }
 
 //Tell both steppers to go to the Home position or x = 0 and y = 0
@@ -147,12 +165,30 @@ void pump(int _duration = 0)
   delay(_duration);
   digitalWrite(pumpRelay, LOW);
 }
-
+void handleWifi(String input)
+{
+  String ssid_ = input.substring(input.indexOf("ssid.")+5, input.indexOf(".pass."));
+  String pass_ = input.substring(input.indexOf(".pass.")+6, input.length());
+  ssid = ssid_;
+  pass = pass_;
+  save_config();
+  if(!WiFi.isConnected()){initialize_wifi();}
+}
+void parseXY(String input)
+{
+  float goX = input.substring(3, input.indexOf("goY")).toFloat();
+  goX = goX/100;
+  goX = goX*fullLength;
+  float goY = input.substring(input.indexOf("goY")+3, input.length()).toFloat();
+  goY = goY/100;
+  goY = goY*fullLength;
+  move_to_X_Y(goX, goY);
+}
 //Move steppers to a specific point within the limits of the x and y axes
 void move_to_X_Y(float _x, float _y)
 {
   xTarget = round(_x);
-  yTarget = round(_y);
+  yTarget = -round(_y);
   stepperX.setTargetPositionInSteps(xTarget);
   stepperY.setTargetPositionInSteps(yTarget);
   sprintf(buffer, "Set stepper target step position [X:%i, Y:%i]", xTarget, yTarget);
@@ -185,6 +221,21 @@ void move_to_next_Y()
 {
   float Y_ = constrain(yTarget+segmentLen, fullLength, 0);
   move_to_X_Y(xTarget, Y_);
+}
+
+void parseMicrostep(String input)
+{
+  microStep = input.substring(input.indexOf("microstep")+9, input.length()).toInt();
+  stepDivisor = 32/microStep;
+  fullLength = 198720/stepDivisor;
+  segmentLen = fullLength/(numSubdivisions-1);
+}
+
+void updateSpeed(String input)
+{
+  SPEED_IN_STEPS_PER_SECOND = input.substring(input.indexOf("speed")+5, input.length()).toInt();
+  stepperX.setSpeedInStepsPerSecond(SPEED_IN_STEPS_PER_SECOND);
+  stepperY.setSpeedInStepsPerSecond(SPEED_IN_STEPS_PER_SECOND);
 }
 
 //Save the current WiFi config values in the local SPIFFS system
@@ -301,25 +352,10 @@ void handle_input(String input)
     if(input == "emptyvial"){}//capture an empty vial reference image
     if(input.indexOf("dur") == 0){duration = int((input.substring(input.indexOf(".")+1, input.length()).toFloat())/pumpRate);}//set duration of pump on to achieve desired output volume with current pump rate
     if(input.indexOf("cal") == 0){pumpRate = float(input.substring(input.indexOf(".")+1, input.length()).toFloat())/1000;}//calibrate pump rate with user input
-    if(input.indexOf("goX") == 0)//go to position x, y
-    {
-      float goX = input.substring(3, input.indexOf("goY")).toFloat();
-      goX = goX/100;
-      goX = goX*fullLength;
-      float goY = input.substring(input.indexOf("goY")+3, input.length()).toFloat();
-      goY = goY/100;
-      goY = goY*fullLength;
-      move_to_X_Y(goX, goY);
-    }
-    if(input.indexOf("ssid.") == 0)//configure the wifi
-    {
-      String ssid_ = input.substring(input.indexOf("ssid.")+5, input.indexOf(".pass."));
-      String pass_ = input.substring(input.indexOf(".pass.")+6, input.length());
-      ssid = ssid_;
-      pass = pass_;
-      save_config();
-      if(!WiFi.isConnected()){initialize_wifi();}
-    }
+    if(input.indexOf("goX") == 0){parseXY(input);}//Parse string XY then go to position x, y
+    if(input.indexOf("ssid.") == 0){handleWifi(input);}//configure the wifi then reset the device
+    if(input.indexOf("microstep") == 0){parseMicrostep(input);}//Update the microStep variable and all derivatives
+    if(input.indexOf("speed") == 0){updateSpeed(input);}//set the speed in steps per second
 }
 
 // Does nothing right now just a callback fn

@@ -1,17 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <CustomBuild Include="C:\Users\Jeremy\Documents\PlatformIO\Projects\211128-111757-esp32dev\build\CMakeFiles\bdbecf5a18b4c2f40de78a897f85ee77\Continuous.rule">
+    <CustomBuild Include="D:\Documents\PlatformIO\Projects\espxyfly\build\CMakeFiles\b39756431feb69db96a19e95c50c0ba7\Continuous.rule">
       <Filter>CMake Rules</Filter>
     </CustomBuild>
-    <CustomBuild Include="C:\Users\Jeremy\Documents\PlatformIO\Projects\211128-111757-esp32dev\CMakeLists.txt" />
+    <CustomBuild Include="D:\Documents\PlatformIO\Projects\espxyfly\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="C:\Users\Jeremy\Documents\PlatformIO\Projects\211128-111757-esp32dev\build\CMakeFiles\Continuous" />
+    <None Include="D:\Documents\PlatformIO\Projects\espxyfly\build\CMakeFiles\Continuous" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CMake Rules">
-      <UniqueIdentifier>{744B7A40-7C3C-3AA6-839D-CA3ED89F0957}</UniqueIdentifier>
+      <UniqueIdentifier>{731D552F-5A66-3C03-B165-F015A0916636}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
