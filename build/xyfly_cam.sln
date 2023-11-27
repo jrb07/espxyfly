@@ -4,7 +4,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ALL_BUILD", "ALL_BUILD.vcxproj", "{77105C89-2CCD-3966-8FD4-FC71DBA9CC5F}"
 	ProjectSection(ProjectDependencies) = postProject
 		{4AC1CD77-6C28-3327-AA1D-5146797BB520} = {4AC1CD77-6C28-3327-AA1D-5146797BB520}
-		{7EFA6969-ED45-3213-8260-D621BD78F18E} = {7EFA6969-ED45-3213-8260-D621BD78F18E}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Continuous", "Continuous.vcxproj", "{92FA468E-2289-3865-888C-A15DCCB115EB}"
@@ -40,11 +39,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RUN_TESTS", "RUN_TESTS.vcxp
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ZERO_CHECK", "ZERO_CHECK.vcxproj", "{4AC1CD77-6C28-3327-AA1D-5146797BB520}"
 	ProjectSection(ProjectDependencies) = postProject
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xyfly_cam", "xyfly_cam.vcxproj", "{7EFA6969-ED45-3213-8260-D621BD78F18E}"
-	ProjectSection(ProjectDependencies) = postProject
-		{4AC1CD77-6C28-3327-AA1D-5146797BB520} = {4AC1CD77-6C28-3327-AA1D-5146797BB520}
 	EndProjectSection
 EndProject
 Global
@@ -95,14 +89,6 @@ Global
 		{4AC1CD77-6C28-3327-AA1D-5146797BB520}.MinSizeRel|x64.Build.0 = MinSizeRel|x64
 		{4AC1CD77-6C28-3327-AA1D-5146797BB520}.RelWithDebInfo|x64.ActiveCfg = RelWithDebInfo|x64
 		{4AC1CD77-6C28-3327-AA1D-5146797BB520}.RelWithDebInfo|x64.Build.0 = RelWithDebInfo|x64
-		{7EFA6969-ED45-3213-8260-D621BD78F18E}.Debug|x64.ActiveCfg = Debug|x64
-		{7EFA6969-ED45-3213-8260-D621BD78F18E}.Debug|x64.Build.0 = Debug|x64
-		{7EFA6969-ED45-3213-8260-D621BD78F18E}.Release|x64.ActiveCfg = Release|x64
-		{7EFA6969-ED45-3213-8260-D621BD78F18E}.Release|x64.Build.0 = Release|x64
-		{7EFA6969-ED45-3213-8260-D621BD78F18E}.MinSizeRel|x64.ActiveCfg = MinSizeRel|x64
-		{7EFA6969-ED45-3213-8260-D621BD78F18E}.MinSizeRel|x64.Build.0 = MinSizeRel|x64
-		{7EFA6969-ED45-3213-8260-D621BD78F18E}.RelWithDebInfo|x64.ActiveCfg = RelWithDebInfo|x64
-		{7EFA6969-ED45-3213-8260-D621BD78F18E}.RelWithDebInfo|x64.Build.0 = RelWithDebInfo|x64
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C4C5B72A-BE53-3418-98DE-0EE73FA3D270}

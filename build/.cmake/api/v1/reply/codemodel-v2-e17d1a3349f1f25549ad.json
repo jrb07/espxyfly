@@ -19,8 +19,7 @@
 						2,
 						3,
 						4,
-						5,
-						6
+						5
 					]
 				}
 			],
@@ -40,8 +39,7 @@
 						2,
 						3,
 						4,
-						5,
-						6
+						5
 					]
 				}
 			],
@@ -50,7 +48,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "ALL_BUILD::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-ALL_BUILD-Debug-f718290822536d243730.json",
+					"jsonFile" : "target-ALL_BUILD-Debug-a6b161d3020aa24f2365.json",
 					"name" : "ALL_BUILD",
 					"projectIndex" : 0
 				},
@@ -88,13 +86,6 @@
 					"jsonFile" : "target-ZERO_CHECK-Debug-f4bde217628e292db050.json",
 					"name" : "ZERO_CHECK",
 					"projectIndex" : 0
-				},
-				{
-					"directoryIndex" : 0,
-					"id" : "xyfly_cam::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-xyfly_cam-Debug-06064a1b58378e4c6e36.json",
-					"name" : "xyfly_cam",
-					"projectIndex" : 0
 				}
 			]
 		},
@@ -116,8 +107,7 @@
 						2,
 						3,
 						4,
-						5,
-						6
+						5
 					]
 				}
 			],
@@ -137,8 +127,7 @@
 						2,
 						3,
 						4,
-						5,
-						6
+						5
 					]
 				}
 			],
@@ -147,7 +136,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "ALL_BUILD::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-ALL_BUILD-Release-f718290822536d243730.json",
+					"jsonFile" : "target-ALL_BUILD-Release-a6b161d3020aa24f2365.json",
 					"name" : "ALL_BUILD",
 					"projectIndex" : 0
 				},
@@ -185,13 +174,6 @@
 					"jsonFile" : "target-ZERO_CHECK-Release-f4bde217628e292db050.json",
 					"name" : "ZERO_CHECK",
 					"projectIndex" : 0
-				},
-				{
-					"directoryIndex" : 0,
-					"id" : "xyfly_cam::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-xyfly_cam-Release-a8f2611a735cc41768e4.json",
-					"name" : "xyfly_cam",
-					"projectIndex" : 0
 				}
 			]
 		},
@@ -213,8 +195,7 @@
 						2,
 						3,
 						4,
-						5,
-						6
+						5
 					]
 				}
 			],
@@ -234,8 +215,7 @@
 						2,
 						3,
 						4,
-						5,
-						6
+						5
 					]
 				}
 			],
@@ -244,7 +224,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "ALL_BUILD::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-ALL_BUILD-MinSizeRel-f718290822536d243730.json",
+					"jsonFile" : "target-ALL_BUILD-MinSizeRel-a6b161d3020aa24f2365.json",
 					"name" : "ALL_BUILD",
 					"projectIndex" : 0
 				},
@@ -282,13 +262,6 @@
 					"jsonFile" : "target-ZERO_CHECK-MinSizeRel-f4bde217628e292db050.json",
 					"name" : "ZERO_CHECK",
 					"projectIndex" : 0
-				},
-				{
-					"directoryIndex" : 0,
-					"id" : "xyfly_cam::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-xyfly_cam-MinSizeRel-f71dba45d4ec550f8213.json",
-					"name" : "xyfly_cam",
-					"projectIndex" : 0
 				}
 			]
 		},
@@ -310,8 +283,7 @@
 						2,
 						3,
 						4,
-						5,
-						6
+						5
 					]
 				}
 			],
@@ -331,8 +303,7 @@
 						2,
 						3,
 						4,
-						5,
-						6
+						5
 					]
 				}
 			],
@@ -341,7 +312,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "ALL_BUILD::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-ALL_BUILD-RelWithDebInfo-f718290822536d243730.json",
+					"jsonFile" : "target-ALL_BUILD-RelWithDebInfo-a6b161d3020aa24f2365.json",
 					"name" : "ALL_BUILD",
 					"projectIndex" : 0
 				},
@@ -378,13 +349,6 @@
 					"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df",
 					"jsonFile" : "target-ZERO_CHECK-RelWithDebInfo-f4bde217628e292db050.json",
 					"name" : "ZERO_CHECK",
-					"projectIndex" : 0
-				},
-				{
-					"directoryIndex" : 0,
-					"id" : "xyfly_cam::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-xyfly_cam-RelWithDebInfo-7532b1026faa1d74a72d.json",
-					"name" : "xyfly_cam",
 					"projectIndex" : 0
 				}
 			]

@@ -3,7 +3,6 @@ D:/Documents/PlatformIO/Projects/espxyfly/build/CMakeFiles/Experimental.dir
 D:/Documents/PlatformIO/Projects/espxyfly/build/CMakeFiles/Continuous.dir
 D:/Documents/PlatformIO/Projects/espxyfly/build/CMakeFiles/Nightly.dir
 D:/Documents/PlatformIO/Projects/espxyfly/build/CMakeFiles/PACKAGE.dir
-D:/Documents/PlatformIO/Projects/espxyfly/build/CMakeFiles/xyfly_cam.dir
 D:/Documents/PlatformIO/Projects/espxyfly/build/CMakeFiles/RUN_TESTS.dir
 D:/Documents/PlatformIO/Projects/espxyfly/build/CMakeFiles/ALL_BUILD.dir
 D:/Documents/PlatformIO/Projects/espxyfly/build/CMakeFiles/ZERO_CHECK.dir

@@ -19,32 +19,45 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 #include <ESP_FlexyStepper.h>
 #define LIMIT_SWITCH_PIN_X 5
 #define LIMIT_SWITCH_PIN_Y 25
-//198720 is the number of steps to travel a full length at 32 microsteps
+//198720 is the number of steps to travel a full length at 32 microsteps per step
+//    Transition from step number to distance so fullLengthMM is 250mm
 //To calculate the stepDivisor take the microStep and divide by the max microStep (32) for example:
 //    (32/microStep = stepDivisor)
 //    (32/2 = 16) (32/4 = 8) (32/8 = 4) (32/16 = 2) (32/32 = 1)
-int microStep = 16;
-int stepDivisor = 32/microStep;
-int fullLength = 198720/stepDivisor;
 int numSubdivisions = 10;
-int segmentLen = fullLength/(numSubdivisions-1);
+int microStep = 32;//this is the default microstep but can be changed by the client through the server
+int stepFactor = 32/microStep;// 32/32 = 1; 32/16 = 2; etc...
+int fullLengthMM = 266;//this is the full length of the axis measured experimentally
+int fullLengthSteps32 = 180000;//number of steps to travel a full length at 32 microsteps
+int fullLengthSteps = fullLengthSteps32/stepFactor;//number of steps to travel a full length at 32 microsteps
+int stepsPerMM32 = fullLengthSteps32/fullLengthMM;
+int stepsPerMM = stepsPerMM32/stepFactor;//scale the stepsPerMM using the current microStep
+int segmentLen = fullLengthSteps/numSubdivisions;//this is the number of steps per segment length defined by the number of subdivisions
 #define stepPinX 14
 #define dirPinX 12
 #define stepPinY 13
 #define dirPinY 15
-int SPEED_IN_STEPS_PER_SECOND = 4000;
-const int ACCELERATION_IN_STEPS_PER_SECOND = 4000;
-const int DECELERATION_IN_STEPS_PER_SECOND = 4000;
+int SPEED_IN_STEPS_PER_SECOND = 50000;
+int ACCELERATION_IN_STEPS_PER_SECOND = SPEED_IN_STEPS_PER_SECOND;
+int DECELERATION_IN_STEPS_PER_SECOND = SPEED_IN_STEPS_PER_SECOND;
 int xTarget = 0;
 int yTarget = 0;
 ESP_FlexyStepper stepperX, stepperY;
 
 // Pump
-#define pumpRelay 16
-int duration = 1000;
+#define pumpRelay 18
+int duration = 1000;//duration in milliseconds
 float pumpRate = 1;//pumping rate in mL/s
 bool pumping = false;
 bool fillAll = false;
+
+// Joystick
+#define joystickPinX 26
+#define joystickPinY 27
+bool joystickMode = false;
+int joyX = 0;
+int joyY = 0;
+int threshold = 10;
 
 // OTA & WiFi & Async webserver
 #include <WiFi.h>
@@ -61,36 +74,13 @@ AsyncWebServer server(80);
 DNSServer dnsServer;
 String ssid = "";
 String pass = "";
-String apssid = "XYFLYAP";
+String apssid = "XYFLYAP";//This is the ID of the network the device will host if it cannot connect to other Wifi network
 
-// Timer functions to keep up with various asynchronous tasks
+// Onboard functionalities such as onboard LED
+#define ONBOARD_LED 2
+
+// Timer functions to keep up with syncing the display hardware if in use
 int timer0 = 0;
-
-// Initialize all the periphreals and BT
-void setup(){initialize_XYFLY();}
-
-//constantly idling
-void loop(){idle();}
-
-void idle()
-{
-  ArduinoOTA.handle();
-  dnsServer.processNextRequest();
-  delay(1);
-  //if the screen is in use then incremement a timer to clear the screen
-  if(useScreen)
-  {
-    //increment the timer to keep up with clearing the screen occasionally
-    timer0++;
-    if(timer0 >= 1000)
-    {
-      timer0 = 0;
-      display.clearDisplay();
-    }
-  }
-  // If the main function is being run then fill all vials
-  if(fillAll){fillAllVials();}
-}
 
 //Function that takes in a String and then outputs that String to all displays in this project
 void update_status(String updated_status)
@@ -106,12 +96,124 @@ void update_status(String updated_status)
     display.println(updated_status);
     display.display();
   }
+  // Send a status update to the webserver
+  // HTTPClient http;
+  // String serverPath = WiFi.softAPIP + "/update" + updated_status;
+  // http.begin(serverPath.c_str());
+  // int httpResponseCode = http.GET();
+  // if(httpResponseCode>0)
+  // {
+  //   debug("HTTP Response Code: ");
+  //   debugln(httpResponseCode);
+  //   String load = http.getString();
+  //   debugln(load);
+  // }
+  // http.end();
+}
+
+//Turn the pump on for a specified amount of time in milliseconds or default to the default amount of time
+void pump(float _duration = 0)
+{
+  //if no custom duration is sent then set custom duration to default duration
+  if(_duration <= 0){_duration = duration;}
+  sprintf(buffer, "Dispensing for: %f ms", _duration);
+  update_status(buffer);
+  digitalWrite(pumpRelay, LOW);
+  delay(_duration);
+  digitalWrite(pumpRelay, HIGH);
+}
+
+// Initialize all the periphreals and BT
+void setup(){initialize_XYFLY();}
+
+// Constant idle with delay that keeps parallel processing alive
+void loop(){idle();}
+
+void idle()
+{
+  // timer0=0;
+  //blocking call until we reach our destination with breaks to process commands
+  while(!stepperX.processMovement() || !stepperY.processMovement())
+  {
+    // timer0+=1;
+    // if(timer0>100000){break;}
+  }
+  delay(1);
+  handleMain();
+  handleScreen();
+  handleLimits();
+  handleJoystick();
+}
+
+// Update the accelerations, deecelerations, speeds, stepFactor, stepsPerMM, segmentLen, and set stepsPerMM for both steppers
+void updateStepperVars()
+{
+  stepFactor = 32/microStep;
+  stepsPerMM = stepsPerMM32/stepFactor;
+  fullLengthSteps = fullLengthSteps32/stepFactor;//number of steps to travel a full length at 32 microsteps
+  segmentLen = fullLengthSteps/numSubdivisions;
+  ACCELERATION_IN_STEPS_PER_SECOND = SPEED_IN_STEPS_PER_SECOND;
+  DECELERATION_IN_STEPS_PER_SECOND = SPEED_IN_STEPS_PER_SECOND;
+  stepperX.setStepsPerMillimeter(stepsPerMM);
+  stepperX.setSpeedInStepsPerSecond(SPEED_IN_STEPS_PER_SECOND);
+  stepperX.setAccelerationInStepsPerSecondPerSecond(ACCELERATION_IN_STEPS_PER_SECOND);
+  stepperX.setDecelerationInStepsPerSecondPerSecond(DECELERATION_IN_STEPS_PER_SECOND);
+  stepperY.setStepsPerMillimeter(stepsPerMM);
+  stepperY.setSpeedInStepsPerSecond(SPEED_IN_STEPS_PER_SECOND);
+  stepperY.setAccelerationInStepsPerSecondPerSecond(ACCELERATION_IN_STEPS_PER_SECOND);
+  stepperY.setDecelerationInStepsPerSecondPerSecond(DECELERATION_IN_STEPS_PER_SECOND);
 }
 
 //Tell the steppers to move to each position and remove each position that has been filled from the list
 void fillAllVials()
 {
   update_status("Function 'fillAllVials()' not yet defined");
+}
+
+void handleMain()
+{  
+  ArduinoOTA.handle();
+  dnsServer.processNextRequest();
+  // If the main function is being run then fill all vials
+  if(fillAll){fillAllVials();}
+}
+
+void handleScreen()
+{
+  //if the screen is in use then incremement a timer to clear the screen
+  if(useScreen)
+  {
+    //increment the timer to keep up with clearing the screen occasionally
+    timer0++;
+    if(timer0 >= 1000)
+    {
+      timer0 = 0;
+      display.clearDisplay();
+    }
+  }
+}
+
+void handleLimits()
+{
+  //Manual limit switch stopping
+  if(LIMIT_SWITCH_PIN_X == HIGH){stepperX.setCurrentPositionAsHomeAndStop();}
+  if(LIMIT_SWITCH_PIN_Y == HIGH){stepperY.setCurrentPositionAsHomeAndStop();}
+}
+
+void handleJoystick()
+{
+    //Check joystick input
+  if(joystickMode)
+  {
+    joyX = analogRead(joystickPinX);
+    joyY = analogRead(joystickPinY);
+    if(joyX>threshold){if(stepperX.motionComplete()){stepperX.startJogging(1);}}
+    // if(joyX<-threshold){stepperX.startJogging(-1);}
+    // if(joyX<threshold && joyX>-threshold){stepperX.stopJogging();}
+    if(joyY>threshold){if(stepperX.motionComplete()){stepperY.startJogging(1);}}
+    // if(joyY<-threshold){stepperY.startJogging(-1);}
+    // if(joyY<threshold && joyY>-threshold){stepperY.stopJogging();}
+  }
 }
 
 //Tell both steppers to go to the Home position or x = 0 and y = 0
@@ -125,16 +227,35 @@ void go_home()
 void set_home()
 {       
   update_status("Setting home...");
-  stepperX.setCurrentPositionAsHomeAndStop();
   stepperY.setCurrentPositionAsHomeAndStop();
 }
 
-//Use a specified amount of ON time to calibrate the amount of fluid dispensed in that time period
+void find_home()
+{
+  stepperX.moveToHomeInSteps(-1, SPEED_IN_STEPS_PER_SECOND, fullLengthSteps, LIMIT_SWITCH_PIN_X);
+  stepperY.moveToHomeInSteps(1, SPEED_IN_STEPS_PER_SECOND, fullLengthSteps, LIMIT_SWITCH_PIN_Y);
+}
+
+//Take 10000 steps to determine the distance per 10000 steps
+void calibrate_steps_X()
+{
+  stepperX.setTargetPositionInSteps(stepperX.getCurrentPositionInSteps()+10000);
+}
+
+// Receive user feedback to determine the number of mm traveled by 1000 steps
+void parseStepCal(String input)
+{
+  float mmper10000steps = float(input.substring(input.indexOf("mmper1000steps")+14, input.length()).toFloat());
+  stepsPerMM32 = 1/mmper10000steps;
+  updateStepperVars();
+}
+
+//Use a specified amount of ON time (10s) to calibrate the amount of fluid dispensed in that time period
 void calibrate_pump()
 {
-  digitalWrite(pumpRelay, HIGH);
-  delay(1000);
   digitalWrite(pumpRelay, LOW);
+  delay(10000);
+  digitalWrite(pumpRelay, HIGH);
 }
 
 //Turn the pump on if it off and off if it is on
@@ -144,26 +265,14 @@ void toggle_pump()
   {
     pumping = false; 
     update_status("Turning pump off.");
-    digitalWrite(pumpRelay, LOW);
+    digitalWrite(pumpRelay, HIGH);
   }
   else
   {
     pumping = true; 
     update_status("Turning pump on.");
-    digitalWrite(pumpRelay, HIGH);
+    digitalWrite(pumpRelay, LOW);
   }
-}
-
-//Turn the pump on for a specified amount of time or default to the default amount of time
-void pump(int _duration = 0)
-{
-  //if no custom duration is sent then set custom duration to default duration
-  if(_duration <= 0){_duration = duration;}
-  sprintf(buffer, "Dispensing for: %i ms", _duration);
-  update_status(buffer);
-  digitalWrite(pumpRelay, HIGH);
-  delay(_duration);
-  digitalWrite(pumpRelay, LOW);
 }
 
 void handleWifi(String input)
@@ -178,12 +287,12 @@ void handleWifi(String input)
 
 void parseXY(String input)
 {
-  float goX = input.substring(3, input.indexOf("goY")).toFloat();
+  float goX = input.substring(input.indexOf("goX")+3, input.indexOf("goY")).toFloat();
   goX = goX/100;
-  goX = goX*fullLength;
+  goX = goX*fullLengthSteps;
   float goY = input.substring(input.indexOf("goY")+3, input.length()).toFloat();
   goY = goY/100;
-  goY = goY*fullLength;
+  goY = goY*fullLengthSteps;
   move_to_X_Y(goX, goY);
 }
 
@@ -192,8 +301,8 @@ void move_to_X_Y(float _x, float _y)
 {
   xTarget = round(_x);
   yTarget = -round(_y);
-  stepperX.setTargetPositionInSteps(xTarget);
-  stepperY.setTargetPositionInSteps(yTarget);
+  stepperX.setTargetPositionRelativeInSteps(stepperX.getCurrentPositionInSteps()+xTarget);
+  stepperY.setTargetPositionRelativeInSteps(stepperY.getCurrentPositionInSteps()+yTarget);
   sprintf(buffer, "Set stepper target step position [X:%i, Y:%i]", xTarget, yTarget);
   debugln(buffer);
 }
@@ -201,44 +310,41 @@ void move_to_X_Y(float _x, float _y)
 //Move to the previous x position
 void move_to_prev_X()
 {
-  float X_ = constrain(xTarget-segmentLen, fullLength, 0);
+  float X_ = constrain(xTarget-segmentLen, fullLengthSteps, 0);
   move_to_X_Y(X_, yTarget);
 }
 
 //Move to the next x position
 void move_to_next_X()
 {
-  float X_ = constrain(xTarget+segmentLen, fullLength, 0);
+  float X_ = constrain(xTarget+segmentLen, fullLengthSteps, 0);
   move_to_X_Y(X_, yTarget);
 }
 
 //Move to the previous y position
 void move_to_prev_Y()
 {
-  float Y_ = constrain(yTarget-segmentLen, fullLength, 0);
+  float Y_ = constrain(yTarget-segmentLen, fullLengthSteps, 0);
   move_to_X_Y(xTarget, Y_);
 }
 
 //Move to the next y position
 void move_to_next_Y()
 {
-  float Y_ = constrain(yTarget+segmentLen, fullLength, 0);
+  float Y_ = constrain(yTarget+segmentLen, fullLengthSteps, 0);
   move_to_X_Y(xTarget, Y_);
 }
 
 void parseMicrostep(String input)
 {
   microStep = input.substring(input.indexOf("microstep")+9, input.length()).toInt();
-  stepDivisor = 32/microStep;
-  fullLength = 198720/stepDivisor;
-  segmentLen = fullLength/(numSubdivisions-1);
+  updateStepperVars();
 }
 
 void updateSpeed(String input)
 {
   SPEED_IN_STEPS_PER_SECOND = input.substring(input.indexOf("speed")+5, input.length()).toInt();
-  stepperX.setSpeedInStepsPerSecond(SPEED_IN_STEPS_PER_SECOND);
-  stepperY.setSpeedInStepsPerSecond(SPEED_IN_STEPS_PER_SECOND);
+  updateStepperVars();
 }
 
 //Save the current WiFi config values in the local SPIFFS system
@@ -338,14 +444,20 @@ void handle_input(String input)
     sprintf(buffer, "Input: %s", input.c_str());
     update_status(buffer);
     if(input == "reset"){update_status("HARD RESET");delay(1000);ESP.restart();}//hard reset
-    if(input == "stop"){fillAll = false;stepperX.emergencyStop();stepperY.emergencyStop();}//emergency stop all operations
+    if(input == "stop"){stepperX.emergencyStop();stepperY.emergencyStop();fillAll = false;}//emergency stop all operations
     if(input == "stopX"){stepperX.emergencyStop();}//emergency stop for x stepper
     if(input == "stopY"){stepperY.emergencyStop();}//emergency stop for y stepper
     if(input == "gohome"){go_home();}//go to 0,0
     if(input == "sethome"){set_home();}//set the current position as 0,0
+    if(input == "findhome"){find_home();}//find home
     if(input == "fillall"){fillAll = true;}//enable async fill operations
     if(input == "stopfillall"){fillAll = false;}//halt the async fill operations
     if(input == "dispense"){toggle_pump();}//turn the pump on/off
+    if(input == "pump"){pump(1000);}//turn the pump on for 1 second then off
+    if(input == "nextX"){move_to_next_X();}//move to the next X position
+    if(input == "prevX"){move_to_prev_X();}//move to the last X position
+    if(input == "nextY"){move_to_next_Y();}//move to the next Y position
+    if(input == "prevY"){move_to_prev_Y();}//move to the last Y position
     if(input == "right"){stepperX.startJogging(1);}//move x stepper in positive direction
     if(input == "left"){stepperX.startJogging(-1);}//move x stepper in negative direction
     if(input == "up"){stepperY.startJogging(1);}//move y stepper in positive direction
@@ -359,6 +471,9 @@ void handle_input(String input)
     if(input.indexOf("ssid.") == 0){handleWifi(input);}//configure the wifi then reset the device
     if(input.indexOf("microstep") == 0){parseMicrostep(input);}//Update the microStep variable and all derivatives
     if(input.indexOf("speed") == 0){updateSpeed(input);}//set the speed in steps per second
+    if(input.indexOf("joy") == 0){if(input == "joy1"){joystickMode=true;}if(input == "joy0"){joystickMode=false;}}//toggle the joystick mode
+    if(input.indexOf("mmper10000steps") == 0){parseStepCal(input);}//Take the number of mm traveled in 10000 steps and use it to calculate stepsPerMM
+    if(input == "stepX"){calibrate_steps_X();}//calibrate the distance moved in 1000 steps in the positive direction from the current position using the x stepper
 }
 
 // Does nothing right now just a callback fn
@@ -374,8 +489,11 @@ void initialize_XYFLY()
   // Start and init serial connection
   Serial.begin(115200);
   Serial.setTimeout(10000);
-  // Begin OLED communication (always first after serial init to avoid errors when updating status)
-  initialize_OLED(); 
+  if(useScreen)
+  {
+    // Begin OLED communication (always first after serial init to avoid errors when updating status)
+    initialize_OLED(); 
+  }
   // Start WiFi
   initialize_wifi();
   // Start OTA service
@@ -384,6 +502,12 @@ void initialize_XYFLY()
   initialize_webserver();
   // Stepper setup
   initialize_steppers();
+  // Set pump pin as output
+  pinMode(pumpRelay, OUTPUT);
+  digitalWrite(pumpRelay, HIGH);
+  //Initialize joystick pins
+  pinMode(joystickPinX, INPUT_PULLUP);
+  pinMode(joystickPinY, INPUT_PULLUP);
   // Update user about wifi
   sprintf(buffer, "MAC:%s",  WiFi.macAddress().c_str());
   debugln(buffer);
@@ -400,22 +524,17 @@ void initialize_XYFLY()
 //Setup for the x and y steppers
 void initialize_steppers()
 {
-  // Set pump pin as output
-  pinMode(pumpRelay, OUTPUT);
   stepperX.setDirectionToHome(1);
   stepperX.connectToPins(stepPinX, dirPinX);
-  stepperX.setSpeedInStepsPerSecond(SPEED_IN_STEPS_PER_SECOND);
-  stepperX.setAccelerationInStepsPerSecondPerSecond(ACCELERATION_IN_STEPS_PER_SECOND);
-  stepperX.setDecelerationInStepsPerSecondPerSecond(DECELERATION_IN_STEPS_PER_SECOND);
+  stepperX.setDirectionToHome(-1);
   stepperX.startAsService();
-  stepperY.setDirectionToHome(1);
   update_status("X stepper service started");
   stepperY.connectToPins(stepPinY, dirPinY);
-  stepperY.setSpeedInStepsPerSecond(SPEED_IN_STEPS_PER_SECOND);
-  stepperY.setAccelerationInStepsPerSecondPerSecond(ACCELERATION_IN_STEPS_PER_SECOND);
-  stepperY.setDecelerationInStepsPerSecondPerSecond(DECELERATION_IN_STEPS_PER_SECOND);
+  stepperY.setDirectionToHome(1);
   stepperY.startAsService();
   update_status("Y stepper service started");
+  updateStepperVars();
+  update_status("Stepper variables assigned after generation");
 }
 
 //Setup for the OLED
