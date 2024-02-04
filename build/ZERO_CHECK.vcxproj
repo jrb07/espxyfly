@@ -23,7 +23,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{4AC1CD77-6C28-3327-AA1D-5146797BB520}</ProjectGuid>
-    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>
     <Keyword>Win32Proj</Keyword>
     <Platform>x64</Platform>
     <ProjectName>ZERO_CHECK</ProjectName>
@@ -109,7 +109,7 @@
       <StdOutEncoding>UTF-8</StdOutEncoding>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Checking Build System</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -SD:/Documents/PlatformIO/Projects/espxyfly -BD:/Documents/PlatformIO/Projects/espxyfly/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file D:/Documents/PlatformIO/Projects/espxyfly/build/xyfly_cam.sln
+"C:\Program Files\CMake\bin\cmake.exe" -SD:/Documents/PlatformIO/Projects/espxyfly -BD:/Documents/PlatformIO/Projects/espxyfly/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file D:/Documents/PlatformIO/Projects/espxyfly/build/xyfly.sln
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -122,7 +122,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Checking Build System</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -SD:/Documents/PlatformIO/Projects/espxyfly -BD:/Documents/PlatformIO/Projects/espxyfly/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file D:/Documents/PlatformIO/Projects/espxyfly/build/xyfly_cam.sln
+"C:\Program Files\CMake\bin\cmake.exe" -SD:/Documents/PlatformIO/Projects/espxyfly -BD:/Documents/PlatformIO/Projects/espxyfly/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file D:/Documents/PlatformIO/Projects/espxyfly/build/xyfly.sln
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -135,7 +135,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
       <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Checking Build System</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -SD:/Documents/PlatformIO/Projects/espxyfly -BD:/Documents/PlatformIO/Projects/espxyfly/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file D:/Documents/PlatformIO/Projects/espxyfly/build/xyfly_cam.sln
+"C:\Program Files\CMake\bin\cmake.exe" -SD:/Documents/PlatformIO/Projects/espxyfly -BD:/Documents/PlatformIO/Projects/espxyfly/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file D:/Documents/PlatformIO/Projects/espxyfly/build/xyfly.sln
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -148,7 +148,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
       <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Checking Build System</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -SD:/Documents/PlatformIO/Projects/espxyfly -BD:/Documents/PlatformIO/Projects/espxyfly/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file D:/Documents/PlatformIO/Projects/espxyfly/build/xyfly_cam.sln
+"C:\Program Files\CMake\bin\cmake.exe" -SD:/Documents/PlatformIO/Projects/espxyfly -BD:/Documents/PlatformIO/Projects/espxyfly/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file D:/Documents/PlatformIO/Projects/espxyfly/build/xyfly.sln
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone

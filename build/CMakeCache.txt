@@ -121,7 +121,7 @@ CMAKE_PROJECT_DESCRIPTION:STATIC=
 CMAKE_PROJECT_HOMEPAGE_URL:STATIC=
 
 //Value Computed by CMake
-CMAKE_PROJECT_NAME:STATIC=xyfly_cam
+CMAKE_PROJECT_NAME:STATIC=xyfly
 
 //Value Computed by CMake
 CMAKE_PROJECT_VERSION:STATIC=0.1.0
@@ -286,10 +286,34 @@ SLURM_SRUN_COMMAND:FILEPATH=SLURM_SRUN_COMMAND-NOTFOUND
 SVNCOMMAND:FILEPATH=SVNCOMMAND-NOTFOUND
 
 //Value Computed by CMake
+esp32_xyfly_BINARY_DIR:STATIC=D:/Documents/PlatformIO/Projects/espxyfly/build
+
+//Value Computed by CMake
+esp32_xyfly_SOURCE_DIR:STATIC=D:/Documents/PlatformIO/Projects/espxyfly
+
+//Value Computed by CMake
+xyfly_BINARY_DIR:STATIC=D:/Documents/PlatformIO/Projects/espxyfly/build
+
+//Value Computed by CMake
+xyfly_SOURCE_DIR:STATIC=D:/Documents/PlatformIO/Projects/espxyfly
+
+//Value Computed by CMake
+xyfly__BINARY_DIR:STATIC=D:/Documents/PlatformIO/Projects/espxyfly/build
+
+//Value Computed by CMake
+xyfly__SOURCE_DIR:STATIC=D:/Documents/PlatformIO/Projects/espxyfly
+
+//Value Computed by CMake
 xyfly_cam_BINARY_DIR:STATIC=D:/Documents/PlatformIO/Projects/espxyfly/build
 
 //Value Computed by CMake
 xyfly_cam_SOURCE_DIR:STATIC=D:/Documents/PlatformIO/Projects/espxyfly
+
+//Value Computed by CMake
+xyflycam_BINARY_DIR:STATIC=D:/Documents/PlatformIO/Projects/espxyfly/build
+
+//Value Computed by CMake
+xyflycam_SOURCE_DIR:STATIC=D:/Documents/PlatformIO/Projects/espxyfly
 
 
 ########################

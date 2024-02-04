@@ -703,7 +703,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "xyfly_cam"
+			"value" : "xyfly"
 		},
 		{
 			"name" : "CMAKE_PROJECT_VERSION",
@@ -1494,6 +1494,78 @@
 			"value" : "SVNCOMMAND-NOTFOUND"
 		},
 		{
+			"name" : "esp32_xyfly_BINARY_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "D:/Documents/PlatformIO/Projects/espxyfly/build"
+		},
+		{
+			"name" : "esp32_xyfly_SOURCE_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "D:/Documents/PlatformIO/Projects/espxyfly"
+		},
+		{
+			"name" : "xyfly_BINARY_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "D:/Documents/PlatformIO/Projects/espxyfly/build"
+		},
+		{
+			"name" : "xyfly_SOURCE_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "D:/Documents/PlatformIO/Projects/espxyfly"
+		},
+		{
+			"name" : "xyfly__BINARY_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "D:/Documents/PlatformIO/Projects/espxyfly/build"
+		},
+		{
+			"name" : "xyfly__SOURCE_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "D:/Documents/PlatformIO/Projects/espxyfly"
+		},
+		{
 			"name" : "xyfly_cam_BINARY_DIR",
 			"properties" : 
 			[
@@ -1507,6 +1579,30 @@
 		},
 		{
 			"name" : "xyfly_cam_SOURCE_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "D:/Documents/PlatformIO/Projects/espxyfly"
+		},
+		{
+			"name" : "xyflycam_BINARY_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "D:/Documents/PlatformIO/Projects/espxyfly/build"
+		},
+		{
+			"name" : "xyflycam_SOURCE_DIR",
 			"properties" : 
 			[
 				{

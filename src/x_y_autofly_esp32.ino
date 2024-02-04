@@ -6,15 +6,6 @@
 char buffer[512];
 char character; 
 
-// OLED capability variables
-bool useScreen = false;
-#include <Wire.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
-#define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 64
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
-
 // Stepper associated variables
 #include <ESP_FlexyStepper.h>
 #define LIMIT_SWITCH_PIN_X 5
@@ -37,7 +28,7 @@ int segmentLen = fullLengthSteps/numSubdivisions;//this is the number of steps p
 #define dirPinX 12
 #define stepPinY 13
 #define dirPinY 15
-int SPEED_IN_STEPS_PER_SECOND = 50000;
+int SPEED_IN_STEPS_PER_SECOND = 80000;
 int ACCELERATION_IN_STEPS_PER_SECOND = SPEED_IN_STEPS_PER_SECOND;
 int DECELERATION_IN_STEPS_PER_SECOND = SPEED_IN_STEPS_PER_SECOND;
 int xTarget = 0;
@@ -81,6 +72,7 @@ String apssid = "XYFLYAP";//This is the ID of the network the device will host i
 
 // Timer functions to keep up with syncing the display hardware if in use
 int timer0 = 0;
+bool timerBreak = false;
 
 //Function that takes in a String and then outputs that String to all displays in this project
 void update_status(String updated_status)
@@ -131,13 +123,6 @@ void loop(){idle();}
 
 void idle()
 {
-  // timer0=0;
-  //blocking call until we reach our destination with breaks to process commands
-  while(!stepperX.processMovement() || !stepperY.processMovement())
-  {
-    // timer0+=1;
-    // if(timer0>100000){break;}
-  }
   delay(1);
   handleMain();
   handleScreen();
@@ -167,7 +152,19 @@ void updateStepperVars()
 //Tell the steppers to move to each position and remove each position that has been filled from the list
 void fillAllVials()
 {
-  update_status("Function 'fillAllVials()' not yet defined");
+  for(int i = 0; i++; i<numSubdivisions)
+  {
+    move_to_next_X();
+    pump(1000);
+    for(int j = 0; j++; j<numSubdivisions)
+    {
+      move_to_next_Y();
+      pump(1000);
+    }
+  }
+  move_to_prev_X();
+  move_to_prev_Y();
+  go_home();
 }
 
 void handleMain()
@@ -214,6 +211,8 @@ void handleJoystick()
     // if(joyY<-threshold){stepperY.startJogging(-1);}
     // if(joyY<threshold && joyY>-threshold){stepperY.stopJogging();}
   }
+  sprintf(buffer, "joyX: %f joyY: %f", joyX, joyY);
+  update_status(buffer);
 }
 
 //Tell both steppers to go to the Home position or x = 0 and y = 0
@@ -221,13 +220,15 @@ void go_home()
 {
   update_status("Going home...");
   move_to_X_Y(0, 0);
+  delay(100);
+  find_home();
 }
 
 //Set the current position as the Home position (x = 0, y = 0)
 void set_home()
 {       
   update_status("Setting home...");
-  stepperY.setCurrentPositionAsHomeAndStop();
+  find_home();
 }
 
 void find_home()
@@ -301,8 +302,12 @@ void move_to_X_Y(float _x, float _y)
 {
   xTarget = round(_x);
   yTarget = -round(_y);
-  stepperX.setTargetPositionRelativeInSteps(stepperX.getCurrentPositionInSteps()+xTarget);
-  stepperY.setTargetPositionRelativeInSteps(stepperY.getCurrentPositionInSteps()+yTarget);
+  stepperX.setTargetPositionInSteps(xTarget);
+  //blocking call until we reach our destination with breaks to process commands
+  while(!stepperX.processMovement()){}
+  delay(1);
+  stepperY.setTargetPositionInSteps(yTarget);
+  while(!stepperY.processMovement()){}
   sprintf(buffer, "Set stepper target step position [X:%i, Y:%i]", xTarget, yTarget);
   debugln(buffer);
 }
@@ -489,11 +494,6 @@ void initialize_XYFLY()
   // Start and init serial connection
   Serial.begin(115200);
   Serial.setTimeout(10000);
-  if(useScreen)
-  {
-    // Begin OLED communication (always first after serial init to avoid errors when updating status)
-    initialize_OLED(); 
-  }
   // Start WiFi
   initialize_wifi();
   // Start OTA service
@@ -535,19 +535,6 @@ void initialize_steppers()
   update_status("Y stepper service started");
   updateStepperVars();
   update_status("Stepper variables assigned after generation");
-}
-
-//Setup for the OLED
-void initialize_OLED()
-{
-  Wire.begin(5, 4);
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C, false, false)) {debugln(F("SSD1306 allocation failed"));for(;;);}else
-  {
-    display.setTextSize(2);
-    display.setTextColor(WHITE);
-    // Clear the buffer.  
-    update_status("XYFLY BETA");
-  }
 }
 
 //Setup the over the air (OTA) update functionality
