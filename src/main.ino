@@ -127,7 +127,6 @@ void idle()
   handleMain();
   handleScreen();
   handleLimits();
-  handleJoystick();
 }
 
 // Update the accelerations, deecelerations, speeds, stepFactor, stepsPerMM, segmentLen, and set stepsPerMM for both steppers
@@ -195,24 +194,6 @@ void handleLimits()
   //Manual limit switch stopping
   if(LIMIT_SWITCH_PIN_X == HIGH){stepperX.setCurrentPositionAsHomeAndStop();}
   if(LIMIT_SWITCH_PIN_Y == HIGH){stepperY.setCurrentPositionAsHomeAndStop();}
-}
-
-void handleJoystick()
-{
-    //Check joystick input
-  if(joystickMode)
-  {
-    joyX = analogRead(joystickPinX);
-    joyY = analogRead(joystickPinY);
-    if(joyX>threshold){if(stepperX.motionComplete()){stepperX.startJogging(1);}}
-    // if(joyX<-threshold){stepperX.startJogging(-1);}
-    // if(joyX<threshold && joyX>-threshold){stepperX.stopJogging();}
-    if(joyY>threshold){if(stepperX.motionComplete()){stepperY.startJogging(1);}}
-    // if(joyY<-threshold){stepperY.startJogging(-1);}
-    // if(joyY<threshold && joyY>-threshold){stepperY.stopJogging();}
-  }
-  sprintf(buffer, "joyX: %f joyY: %f", joyX, joyY);
-  update_status(buffer);
 }
 
 //Tell both steppers to go to the Home position or x = 0 and y = 0
@@ -479,6 +460,7 @@ void handle_input(String input)
     if(input.indexOf("joy") == 0){if(input == "joy1"){joystickMode=true;}if(input == "joy0"){joystickMode=false;}}//toggle the joystick mode
     if(input.indexOf("mmper10000steps") == 0){parseStepCal(input);}//Take the number of mm traveled in 10000 steps and use it to calculate stepsPerMM
     if(input == "stepX"){calibrate_steps_X();}//calibrate the distance moved in 1000 steps in the positive direction from the current position using the x stepper
+    if(input == "DISPLAY"){update_status("Received message from display-server")}// this is a test message sent to confirm that the espnow connection is alive
 }
 
 // Does nothing right now just a callback fn
@@ -505,9 +487,6 @@ void initialize_XYFLY()
   // Set pump pin as output
   pinMode(pumpRelay, OUTPUT);
   digitalWrite(pumpRelay, HIGH);
-  //Initialize joystick pins
-  pinMode(joystickPinX, INPUT_PULLUP);
-  pinMode(joystickPinY, INPUT_PULLUP);
   // Update user about wifi
   sprintf(buffer, "MAC:%s",  WiFi.macAddress().c_str());
   debugln(buffer);
