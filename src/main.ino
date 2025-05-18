@@ -2,7 +2,7 @@
 #define debug(x) Serial.print(x)
 #define debugln(x) Serial.println(x)
 
-// Command parsing variables 
+// Variables for parsing commands from the user
 char buffer[512];
 char character; 
 
@@ -10,6 +10,10 @@ char character;
 #include <ESP_FlexyStepper.h>
 #define LIMIT_SWITCH_PIN_X 5
 #define LIMIT_SWITCH_PIN_Y 25
+#define STEP_PIN_X 14
+#define DIR_PIN_X 12
+#define STEP_PIN_Y 13
+#define DIR_PIN_Y 15
 //198720 is the number of steps to travel a full length at 32 microsteps per step
 //    Transition from step number to distance so fullLengthMM is 250mm
 //To calculate the stepDivisor take the microStep and divide by the max microStep (32) for example:
@@ -24,10 +28,6 @@ int fullLengthSteps = fullLengthSteps32/stepFactor;//number of steps to travel a
 int stepsPerMM32 = fullLengthSteps32/fullLengthMM;
 int stepsPerMM = stepsPerMM32/stepFactor;//scale the stepsPerMM using the current microStep
 int segmentLen = fullLengthSteps/numSubdivisions;//this is the number of steps per segment length defined by the number of subdivisions
-#define stepPinX 14
-#define dirPinX 12
-#define stepPinY 13
-#define dirPinY 15
 int SPEED_IN_STEPS_PER_SECOND = 80000;
 int ACCELERATION_IN_STEPS_PER_SECOND = SPEED_IN_STEPS_PER_SECOND;
 int DECELERATION_IN_STEPS_PER_SECOND = SPEED_IN_STEPS_PER_SECOND;
@@ -36,39 +36,28 @@ int yTarget = 0;
 ESP_FlexyStepper stepperX, stepperY;
 
 // Pump
-#define pumpRelay 18
+#define PUMP_RELAY_PIN 18
 int duration = 1000;//duration in milliseconds
 float pumpRate = 1;//pumping rate in mL/s
 bool pumping = false;
 bool fillAll = false;
 
 // Joystick
-#define joystickPinX 26
-#define joystickPinY 27
+#define JOYSTICK_PIN_X 26 //USER INPUT PIN******
+#define JOYSTICK_PIN_Y 27 //USER INPUT PIN******
 bool joystickMode = false;
 int joyX = 0;
 int joyY = 0;
 int threshold = 10;
 
-// OTA & WiFi & Async webserver
-#include <WiFi.h>
-#include <ESPAsync_WiFiManager.h> 
-#include <ArduinoJson.h>
-#include <HTTPClient.h>
-#include <SPIFFS.h>
-#include <ESPmDNS.h>
-#include <WiFiUdp.h>
-#include <ArduinoOTA.h>
-#include <DNSServer.h>
-#include "ESPAsyncWebServer.h"
-AsyncWebServer server(80);
-DNSServer dnsServer;
-String ssid = "";
+
+#include <LittleFS.h>
+String ssid = "XYFLYAP";//This is the ID of the network that the display server will host and this device will connect to
 String pass = "";
-String apssid = "XYFLYAP";//This is the ID of the network the device will host if it cannot connect to other Wifi network
+String apssid = "";//This is the ID of the network this device would host if it cannot connect to the display server- not in use currently
 
 // Onboard functionalities such as onboard LED
-#define ONBOARD_LED 2
+#define ONBOARD_LED_PIN 2
 
 // Timer functions to keep up with syncing the display hardware if in use
 int timer0 = 0;
@@ -80,27 +69,6 @@ void update_status(String updated_status)
   debugln("STATUS UPDATE: ");
   debug(updated_status);
   debugln();
-  // If the screen is in use then update the display
-  if(useScreen)
-  {
-    display.clearDisplay();
-    display.setCursor(0, 0);
-    display.println(updated_status);
-    display.display();
-  }
-  // Send a status update to the webserver
-  // HTTPClient http;
-  // String serverPath = WiFi.softAPIP + "/update" + updated_status;
-  // http.begin(serverPath.c_str());
-  // int httpResponseCode = http.GET();
-  // if(httpResponseCode>0)
-  // {
-  //   debug("HTTP Response Code: ");
-  //   debugln(httpResponseCode);
-  //   String load = http.getString();
-  //   debugln(load);
-  // }
-  // http.end();
 }
 
 //Turn the pump on for a specified amount of time in milliseconds or default to the default amount of time
@@ -110,9 +78,9 @@ void pump(float _duration = 0)
   if(_duration <= 0){_duration = duration;}
   sprintf(buffer, "Dispensing for: %f ms", _duration);
   update_status(buffer);
-  digitalWrite(pumpRelay, LOW);
+  digitalWrite(PUMP_RELAY_PIN, LOW);
   delay(_duration);
-  digitalWrite(pumpRelay, HIGH);
+  digitalWrite(PUMP_RELAY_PIN, HIGH);
 }
 
 // Initialize all the periphreals and BT
@@ -125,7 +93,6 @@ void idle()
 {
   delay(1);
   handleMain();
-  handleScreen();
   handleLimits();
 }
 
@@ -168,25 +135,8 @@ void fillAllVials()
 
 void handleMain()
 {  
-  ArduinoOTA.handle();
-  dnsServer.processNextRequest();
   // If the main function is being run then fill all vials
   if(fillAll){fillAllVials();}
-}
-
-void handleScreen()
-{
-  //if the screen is in use then incremement a timer to clear the screen
-  if(useScreen)
-  {
-    //increment the timer to keep up with clearing the screen occasionally
-    timer0++;
-    if(timer0 >= 1000)
-    {
-      timer0 = 0;
-      display.clearDisplay();
-    }
-  }
 }
 
 void handleLimits()
@@ -235,9 +185,9 @@ void parseStepCal(String input)
 //Use a specified amount of ON time (10s) to calibrate the amount of fluid dispensed in that time period
 void calibrate_pump()
 {
-  digitalWrite(pumpRelay, LOW);
+  digitalWrite(PUMP_RELAY_PIN, LOW);
   delay(10000);
-  digitalWrite(pumpRelay, HIGH);
+  digitalWrite(PUMP_RELAY_PIN, HIGH);
 }
 
 //Turn the pump on if it off and off if it is on
@@ -247,24 +197,14 @@ void toggle_pump()
   {
     pumping = false; 
     update_status("Turning pump off.");
-    digitalWrite(pumpRelay, HIGH);
+    digitalWrite(PUMP_RELAY_PIN, HIGH);
   }
   else
   {
     pumping = true; 
     update_status("Turning pump on.");
-    digitalWrite(pumpRelay, LOW);
+    digitalWrite(PUMP_RELAY_PIN, LOW);
   }
-}
-
-void handleWifi(String input)
-{
-  String ssid_ = input.substring(input.indexOf("ssid.")+5, input.indexOf(".pass."));
-  String pass_ = input.substring(input.indexOf(".pass.")+6, input.length());
-  ssid = ssid_;
-  pass = pass_;
-  save_config();
-  if(!WiFi.isConnected()){initialize_wifi();}
 }
 
 void parseXY(String input)
@@ -333,101 +273,10 @@ void updateSpeed(String input)
   updateStepperVars();
 }
 
-//Save the current WiFi config values in the local SPIFFS system
-bool save_config() 
-{
-  update_status("Saving config...");
-  update_status("Mount filesystem");
-  if (SPIFFS.begin()) 
-  {
-    update_status("Filesystem mounted");
-    if(SPIFFS.exists("/config.json"))
-    {
-      update_status("Old config found");
-      update_status("Deleting config");
-      SPIFFS.remove("/config.json");
-      update_status("Creating config");
-      SPIFFS.mkdir("/config.json");
-    }else
-    {
-      update_status("No config found");
-      update_status("Creating config");
-      SPIFFS.mkdir("/config.json");
-    }
-    File configFile = SPIFFS.open("/config.json", "w");
-    if (!configFile){debugln("Config open fail");return false;}
-    update_status("Config open");
-    StaticJsonDocument<1024> doc;
-    // Set the values in the document
-    doc["ssid"] = ssid;
-    doc["pass"] = pass;
-    update_status("Config set");
-    // Serialize JSON to file
-    if (serializeJson(doc, configFile) == 0) {update_status("Config write fail");}else{update_status("Config written");}
-    configFile.flush();
-    configFile.close();
-    update_status("Config closed");
-    return true;
-  }else
-  {
-    update_status("Filesystem mount fail");
-    return false;
-  }
-}
-
-//Read the config from the SPIFFS filesystem
-bool read_config()
-{
-  update_status("Reading config...");
-  //read configuration from FS json
-  update_status("Mount filesystem");
-  if (SPIFFS.begin()) 
-  {
-    update_status("Filesystem mounted");
-    if (SPIFFS.exists("/config.json")) 
-    {
-      //file exists, reading and loading
-      update_status("Config found");
-      File configFile = SPIFFS.open("/config.json", "r");
-      if (configFile) 
-      {
-        update_status("Opened config");
-        StaticJsonDocument<1024> doc;
-        update_status("Reading config");
-        // Deserialize the JSON document
-        DeserializationError error = deserializeJson(doc, configFile);
-        // Test if parsing succeeds.
-        if (error) 
-        {
-          update_status(error.f_str());
-          update_status("JSON parse fail");
-          delay(1000);
-          return false;
-        }
-        debug("SSID before config read: ");
-        debugln(ssid);
-        debug("Pass before config read: ");
-        debugln(pass);
-        ssid = doc["ssid"].as<String>();
-        pass = doc["pass"].as<String>();
-        debug("SSID from config: ");
-        debugln(ssid);
-        debug("Pass from config: ");
-        debugln(pass);
-        configFile.close();
-        update_status("Config closed");
-      }
-    }else{update_status("No config file");save_config();return false;}
-  } else {update_status("Filesystem error");return false;}
-  // read successful
-  update_status("Config read done");
-  return true;
-}
-
 //Switch on a String value to control logic flow through the web based UI
 void handle_input(String input)
 {
-    sprintf(buffer, "Input: %s", input.c_str());
+    sprintf(buffer, "Input from motion controller: %s", input.c_str());
     update_status(buffer);
     if(input == "reset"){update_status("HARD RESET");delay(1000);ESP.restart();}//hard reset
     if(input == "stop"){stepperX.emergencyStop();stepperY.emergencyStop();fillAll = false;}//emergency stop all operations
@@ -454,13 +303,12 @@ void handle_input(String input)
     if(input.indexOf("dur") == 0){duration = int((input.substring(input.indexOf(".")+1, input.length()).toFloat())/pumpRate);}//set duration of pump on to achieve desired output volume with current pump rate
     if(input.indexOf("cal") == 0){pumpRate = float(input.substring(input.indexOf(".")+1, input.length()).toFloat())/1000;}//calibrate pump rate with user input
     if(input.indexOf("goX") == 0){parseXY(input);}//Parse string XY then go to position x, y
-    if(input.indexOf("ssid.") == 0){handleWifi(input);}//configure the wifi then reset the device
     if(input.indexOf("microstep") == 0){parseMicrostep(input);}//Update the microStep variable and all derivatives
     if(input.indexOf("speed") == 0){updateSpeed(input);}//set the speed in steps per second
     if(input.indexOf("joy") == 0){if(input == "joy1"){joystickMode=true;}if(input == "joy0"){joystickMode=false;}}//toggle the joystick mode
     if(input.indexOf("mmper10000steps") == 0){parseStepCal(input);}//Take the number of mm traveled in 10000 steps and use it to calculate stepsPerMM
     if(input == "stepX"){calibrate_steps_X();}//calibrate the distance moved in 1000 steps in the positive direction from the current position using the x stepper
-    if(input == "DISPLAY"){update_status("Received message from display-server")}// this is a test message sent to confirm that the espnow connection is alive
+    if(input == "DISPLAY"){update_status("Received message from display-server");}// this is a test message sent to confirm that the espnow connection is alive
 }
 
 // Does nothing right now just a callback fn
@@ -476,27 +324,13 @@ void initialize_XYFLY()
   // Start and init serial connection
   Serial.begin(115200);
   Serial.setTimeout(10000);
-  // Start WiFi
-  initialize_wifi();
-  // Start OTA service
-  initialize_OTA();
-  // Setup async web server
-  initialize_webserver();
   // Stepper setup
   initialize_steppers();
   // Set pump pin as output
-  pinMode(pumpRelay, OUTPUT);
-  digitalWrite(pumpRelay, HIGH);
+  pinMode(PUMP_RELAY_PIN, OUTPUT);
+  digitalWrite(PUMP_RELAY_PIN, HIGH);
   // Update user about wifi
   sprintf(buffer, "MAC:%s",  WiFi.macAddress().c_str());
-  debugln(buffer);
-  if(WiFi.isConnected())
-  {
-    sprintf(buffer, "IP:%s",  WiFi.localIP().toString().c_str());
-  }else
-  {
-    sprintf(buffer, "Wifi:%s IP:%s", apssid.c_str(), WiFi.softAPIP().toString().c_str());
-  }
   update_status(buffer);
 }
 
@@ -504,95 +338,14 @@ void initialize_XYFLY()
 void initialize_steppers()
 {
   stepperX.setDirectionToHome(1);
-  stepperX.connectToPins(stepPinX, dirPinX);
+  stepperX.connectToPins(STEP_PIN_X, DIR_PIN_X);
   stepperX.setDirectionToHome(-1);
   stepperX.startAsService();
   update_status("X stepper service started");
-  stepperY.connectToPins(stepPinY, dirPinY);
+  stepperY.connectToPins(STEP_PIN_Y, DIR_PIN_Y);
   stepperY.setDirectionToHome(1);
   stepperY.startAsService();
   update_status("Y stepper service started");
   updateStepperVars();
   update_status("Stepper variables assigned after generation");
-}
-
-//Setup the over the air (OTA) update functionality
-void initialize_OTA()
-{
-  update_status("Booting OTA");
-  ArduinoOTA
-    .onStart([]() 
-    {
-      String type;
-      if (ArduinoOTA.getCommand() == U_FLASH)
-        type = "sketch";
-      else // U_SPIFFS
-        type = "filesystem";
-      // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-      SPIFFS.end();
-      update_status("OTA: " + type);
-      debugln("OTA update of type: " + type);
-    })
-    .onEnd([]() 
-    {
-      debugln("\nEnd");
-    })
-    .onProgress([](unsigned int progress, unsigned int total) 
-    {
-      sprintf(buffer, "Update    Progress: %u%%\r", (progress / (total / 100)));
-      update_status(buffer);
-      Serial.printf(buffer);
-    })
-    .onError([](ota_error_t error) 
-    {
-      Serial.printf("Error[%u]: ", error);
-      if (error == OTA_AUTH_ERROR) debugln("Auth Failed");
-      else if (error == OTA_BEGIN_ERROR) debugln("Begin Failed");
-      else if (error == OTA_CONNECT_ERROR) debugln("Connect Failed");
-      else if (error == OTA_RECEIVE_ERROR) debugln("Receive Failed");
-      else if (error == OTA_END_ERROR) debugln("End Failed");
-    });
-  ArduinoOTA.begin();
-  update_status("OTA booted");
-}
-
-//Setup the WiFi
-void initialize_wifi()
-{
-  read_config();
-  WiFi.mode(WIFI_AP_STA);
-  WiFi.softAP(apssid.c_str());
-  WiFi.begin(ssid.c_str(), pass.c_str());
-  int i = 0;
-  while (WiFi.status() != WL_CONNECTED) 
-  {
-    delay(1000);
-    debug(".");
-    i++;
-    if(i>10){break;}
-  }
-}
-
-//Setup the webserver which will be used as the user interface
-void initialize_webserver()
-{
-  dnsServer.start(53, "*", WiFi.softAPIP());
-  update_status("DNS server started");
-  //On get requests do things
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
-  {//uses the spiffs, sends the index.html on /, sends resulting the html code to the processor function
-    request->send(SPIFFS, "/index.html", String(), false, processor);
-  });
-  server.on("/config", HTTP_GET, [](AsyncWebServerRequest *request)
-  {//uses the spiffs, sends the config.html on /, sends the resulting html code to the processor function
-    request->send(SPIFFS, "/config.html", String(), false, processor);
-  });
-  server.on("/command", HTTP_GET, [](AsyncWebServerRequest *request)
-  {
-    String inputValue = request->getParam("state")->value();
-    handle_input(inputValue);
-    request->send(200, "text/plain", "OK");
-  });
-  server.begin();
-  update_status("Webserver up");
 }

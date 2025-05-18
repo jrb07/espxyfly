@@ -1,3 +1,7 @@
+'''
+This python script is designed to display the image data from an esp32 cam and capture representative images to train machine learning models with
+'''
+
 import cv2
 import urllib.request
 import numpy as np
@@ -5,7 +9,7 @@ import time
 from pydrive.drive import GoogleDrive
 from pydrive.auth import GoogleAuth
 
-url='http://192.168.0.27:81'
+url='http://192.168.0.27:81' ## This url and port must be updated to match the url and port hosted by the server esp32 on the same network as we are using
 cv2.namedWindow("live transmission", cv2.WINDOW_AUTOSIZE)
  
 count=0
