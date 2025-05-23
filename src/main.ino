@@ -1,3 +1,9 @@
+ /* 
+ Git cmds for me:
+    git config credential.helper store
+    git push https://github.com/jrb07/espxyfly.git
+*/
+
 // Define Serial print functions as debug functions
 #define debug(x) Serial.print(x)
 #define debugln(x) Serial.println(x)
@@ -50,7 +56,7 @@ int joyX = 0;
 int joyY = 0;
 int threshold = 10;
 
-
+// Filesystem
 #include <LittleFS.h>
 String ssid = "XYFLYAP";//This is the ID of the network that the display server will host and this device will connect to
 String pass = "";
@@ -62,6 +68,60 @@ String apssid = "";//This is the ID of the network this device would host if it 
 // Timer functions to keep up with syncing the display hardware if in use
 int timer0 = 0;
 bool timerBreak = false;
+
+//BLE
+#include <NimBLEDevice.h>
+#define SERVICE_UUID        "d6d3eb5e-ddaf-492c-af4e-19323edf8fad"
+#define CMD_CHARACTERISTIC_UUID "c57884e4-fae7-4370-81cf-6b4919b28042"
+NimBLECharacteristic* pCharacteristic    = nullptr;
+bool                  deviceConnected    = false;
+bool                  oldDeviceConnected = false;
+uint32_t              value              = 0;
+
+class serverCallbacks : public NimBLEServerCallbacks
+{
+    void onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo) override 
+    { 
+      Serial.println("New BLE device connected.");
+      // Serial.println("Client address: %s\n",  &connInfo.getAddress().toString());
+      deviceConnected = true; 
+    };
+
+    void onDisconnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo, int reason) override 
+    {
+        // Peer disconnected, add them to the whitelist
+        // This allows us to use the whitelist to filter connection attempts
+        // which will minimize reconnection time.
+        Serial.println("BLE device disconnected.");
+        NimBLEDevice::whiteListAdd(connInfo.getAddress());
+        deviceConnected = false;
+    };
+} serverCallbacks;
+
+class pCallbacks : public NimBLECharacteristicCallbacks 
+{
+  void onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) 
+  {
+    Serial.println("Characteristic onWrite triggered.");
+    String cmd = pCharacteristic->getValue();
+    if (cmd.length() > 0) 
+    {
+      Serial.println("Characteristic event, written: ");
+      Serial.println(value); // Print the integer value
+
+      // int receivedValue = static_cast<String>(value[0]);
+      // if (receivedValue == 1) {
+      //   digitalWrite(ledPin, HIGH);
+      // } else {
+      //   digitalWrite(ledPin, LOW);
+      // }
+    }
+  };
+  void onRead(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo)
+  {
+      Serial.println("Characteristic onRead triggered.");
+  };
+} pCallbacks;
 
 //Function that takes in a String and then outputs that String to all displays in this project
 void update_status(String updated_status)
@@ -91,9 +151,8 @@ void loop(){idle();}
 
 void idle()
 {
-  delay(1);
-  handleMain();
-  handleLimits();
+  delayMicroseconds(1);
+  // handleMain();
 }
 
 // Update the accelerations, deecelerations, speeds, stepFactor, stepsPerMM, segmentLen, and set stepsPerMM for both steppers
@@ -133,10 +192,52 @@ void fillAllVials()
   go_home();
 }
 
+void onAdvComplete(NimBLEAdvertising* pAdvertising) {
+    update_status("Advertising stopped");
+    if (deviceConnected) 
+    {
+      update_status("Device is still connected. If device disconnects then auto-restart advertising.");
+      return;
+    }
+}
+
 void handleMain()
 {  
+  handleLimits();
+  //check for new BLE connections
+  handleBLE();
   // If the main function is being run then fill all vials
   if(fillAll){fillAllVials();}
+}
+
+void handleBLE()
+{
+  // //if a new device has connected
+  // if (deviceConnected) 
+  // {
+  //       pCharacteristic->setValue((uint8_t*)&value, 4);
+  //       pCharacteristic->notify();
+  //       value++;
+  // }
+  // //if there is no new device connected and we have an old device still connected
+  // if (!deviceConnected && oldDeviceConnected) 
+  // {
+  //   NimBLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();
+  //   if (NimBLEDevice::getWhiteListCount() > 0) 
+  //   {
+  //       // Allow anyone to scan at all
+  //       pAdvertising->setScanFilter(false, false);
+  //   }
+  //   // advertise with whitelist for 30 seconds
+  //   pAdvertising->start(30 * 1000);
+  //   update_status("Started BLE advertising");
+  //   oldDeviceConnected = deviceConnected;
+  // }
+
+  // if (deviceConnected && !oldDeviceConnected) {
+  //     // do stuff here on connecting
+  //     oldDeviceConnected = deviceConnected;
+  // }
 }
 
 void handleLimits()
@@ -311,13 +412,6 @@ void handle_input(String input)
     if(input == "DISPLAY"){update_status("Received message from display-server");}// this is a test message sent to confirm that the espnow connection is alive
 }
 
-// Does nothing right now just a callback fn
-String processor(const String& var)
-{
-  debugln("Processor fn received string: " + var);
-  return String();
-}
-
 //Main initialize function that starts serial connections sets pin modes etc...
 void initialize_XYFLY()
 {
@@ -326,12 +420,12 @@ void initialize_XYFLY()
   Serial.setTimeout(10000);
   // Stepper setup
   initialize_steppers();
+  //Initialize the pump (not enough code to put in own function yet...)
   // Set pump pin as output
   pinMode(PUMP_RELAY_PIN, OUTPUT);
   digitalWrite(PUMP_RELAY_PIN, HIGH);
-  // Update user about wifi
-  sprintf(buffer, "MAC:%s",  WiFi.macAddress().c_str());
-  update_status(buffer);
+  //Initialize the BLE functions
+  initialize_BLE();
 }
 
 //Setup for the x and y steppers
@@ -348,4 +442,34 @@ void initialize_steppers()
   update_status("Y stepper service started");
   updateStepperVars();
   update_status("Stepper variables assigned after generation");
+}
+
+void initialize_BLE()
+{
+  update_status("BLE starting...");
+  NimBLEDevice::init("XYFLY");
+  if(NimBLEDevice::isInitialized()){update_status("BLE started.");}
+  //Attempt to set the dBm to +3
+  if(NimBLEDevice::setPower(3)){update_status("BLE dBm set to +3");} 
+  NimBLEServer*         pServer                  = NimBLEDevice::createServer();
+  pServer->setCallbacks(&serverCallbacks);
+  pServer->advertiseOnDisconnect(true);
+  NimBLEService*        pService                 = pServer->createService(SERVICE_UUID);
+  NimBLECharacteristic* pCharacteristic = pService->createCharacteristic(CMD_CHARACTERISTIC_UUID, 
+                                                                        NIMBLE_PROPERTY::READ |
+                                                                        NIMBLE_PROPERTY::WRITE |
+                                                                        NIMBLE_PROPERTY::NOTIFY |
+                                                                        NIMBLE_PROPERTY::INDICATE);
+  pCharacteristic->setCallbacks(&pCallbacks);
+  pService->start();
+  pCharacteristic->setValue("BLE_STARTED");
+  NimBLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();
+  pAdvertising->addServiceUUID(SERVICE_UUID);
+  // Allow anyone to scan and connect (very unsafe) FIX THIS TO A PIN SECURE SERVER ASAP
+  pAdvertising->setScanFilter(false, false);
+  pAdvertising->setName("XYFLYBLE");
+  pAdvertising->setDiscoverableMode(BLE_GAP_DISC_MODE_GEN);
+  pAdvertising->enableScanResponse(false);
+  pAdvertising->setAdvertisingCompleteCallback(onAdvComplete);
+  pAdvertising->start();
 }
