@@ -147,7 +147,7 @@
             .then(characteristic => 
             {
                 console.log("Found the command characteristic: ", characteristic.uuid);
-                const data = new Uint8Array([value]);
+                const data = new TextEncoder().encode([value]);
                 return pCharacteristicFound.writeValue(data);
             })
             .then(() => 

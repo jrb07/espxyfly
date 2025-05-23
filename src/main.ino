@@ -75,53 +75,7 @@ bool timerBreak = false;
 #define CMD_CHARACTERISTIC_UUID "c57884e4-fae7-4370-81cf-6b4919b28042"
 NimBLECharacteristic* pCharacteristic    = nullptr;
 bool                  deviceConnected    = false;
-bool                  oldDeviceConnected = false;
 uint32_t              value              = 0;
-
-class serverCallbacks : public NimBLEServerCallbacks
-{
-    void onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo) override 
-    { 
-      Serial.println("New BLE device connected.");
-      // Serial.println("Client address: %s\n",  &connInfo.getAddress().toString());
-      deviceConnected = true; 
-    };
-
-    void onDisconnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo, int reason) override 
-    {
-        // Peer disconnected, add them to the whitelist
-        // This allows us to use the whitelist to filter connection attempts
-        // which will minimize reconnection time.
-        Serial.println("BLE device disconnected.");
-        NimBLEDevice::whiteListAdd(connInfo.getAddress());
-        deviceConnected = false;
-    };
-} serverCallbacks;
-
-class pCallbacks : public NimBLECharacteristicCallbacks 
-{
-  void onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) 
-  {
-    Serial.println("Characteristic onWrite triggered.");
-    String cmd = pCharacteristic->getValue();
-    if (cmd.length() > 0) 
-    {
-      Serial.println("Characteristic event, written: ");
-      Serial.println(value); // Print the integer value
-
-      // int receivedValue = static_cast<String>(value[0]);
-      // if (receivedValue == 1) {
-      //   digitalWrite(ledPin, HIGH);
-      // } else {
-      //   digitalWrite(ledPin, LOW);
-      // }
-    }
-  };
-  void onRead(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo)
-  {
-      Serial.println("Characteristic onRead triggered.");
-  };
-} pCallbacks;
 
 //Function that takes in a String and then outputs that String to all displays in this project
 void update_status(String updated_status)
@@ -152,7 +106,7 @@ void loop(){idle();}
 void idle()
 {
   delayMicroseconds(1);
-  // handleMain();
+  handleMain();
 }
 
 // Update the accelerations, deecelerations, speeds, stepFactor, stepsPerMM, segmentLen, and set stepsPerMM for both steppers
@@ -192,7 +146,9 @@ void fillAllVials()
   go_home();
 }
 
-void onAdvComplete(NimBLEAdvertising* pAdvertising) {
+//Function that is called when the BLE device is done advertising.
+void onAdvComplete(NimBLEAdvertising* pAdvertising) 
+{
     update_status("Advertising stopped");
     if (deviceConnected) 
     {
@@ -204,47 +160,16 @@ void onAdvComplete(NimBLEAdvertising* pAdvertising) {
 void handleMain()
 {  
   handleLimits();
-  //check for new BLE connections
-  handleBLE();
   // If the main function is being run then fill all vials
   if(fillAll){fillAllVials();}
 }
 
-void handleBLE()
-{
-  // //if a new device has connected
-  // if (deviceConnected) 
-  // {
-  //       pCharacteristic->setValue((uint8_t*)&value, 4);
-  //       pCharacteristic->notify();
-  //       value++;
-  // }
-  // //if there is no new device connected and we have an old device still connected
-  // if (!deviceConnected && oldDeviceConnected) 
-  // {
-  //   NimBLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();
-  //   if (NimBLEDevice::getWhiteListCount() > 0) 
-  //   {
-  //       // Allow anyone to scan at all
-  //       pAdvertising->setScanFilter(false, false);
-  //   }
-  //   // advertise with whitelist for 30 seconds
-  //   pAdvertising->start(30 * 1000);
-  //   update_status("Started BLE advertising");
-  //   oldDeviceConnected = deviceConnected;
-  // }
-
-  // if (deviceConnected && !oldDeviceConnected) {
-  //     // do stuff here on connecting
-  //     oldDeviceConnected = deviceConnected;
-  // }
-}
-
+//If we have hit the X or Y limit switch then emergency stop the relevant X or Y motor
 void handleLimits()
 {
   //Manual limit switch stopping
-  if(LIMIT_SWITCH_PIN_X == HIGH){stepperX.setCurrentPositionAsHomeAndStop();}
-  if(LIMIT_SWITCH_PIN_Y == HIGH){stepperY.setCurrentPositionAsHomeAndStop();}
+  if(LIMIT_SWITCH_PIN_X == HIGH){stepperX.emergencyStop();}
+  if(LIMIT_SWITCH_PIN_Y == HIGH){stepperY.emergencyStop();}
 }
 
 //Tell both steppers to go to the Home position or x = 0 and y = 0
@@ -420,12 +345,10 @@ void initialize_XYFLY()
   Serial.setTimeout(10000);
   // Stepper setup
   initialize_steppers();
-  //Initialize the pump (not enough code to put in own function yet...)
-  // Set pump pin as output
-  pinMode(PUMP_RELAY_PIN, OUTPUT);
-  digitalWrite(PUMP_RELAY_PIN, HIGH);
   //Initialize the BLE functions
   initialize_BLE();
+  //Initialize the pump (not enough code to put in own function yet...)
+  pinMode(PUMP_RELAY_PIN, OUTPUT);
 }
 
 //Setup for the x and y steppers
@@ -434,35 +357,77 @@ void initialize_steppers()
   stepperX.setDirectionToHome(1);
   stepperX.connectToPins(STEP_PIN_X, DIR_PIN_X);
   stepperX.setDirectionToHome(-1);
-  stepperX.startAsService();
+  stepperX.startAsService(1);
   update_status("X stepper service started");
   stepperY.connectToPins(STEP_PIN_Y, DIR_PIN_Y);
   stepperY.setDirectionToHome(1);
-  stepperY.startAsService();
+  stepperY.startAsService(2);
   update_status("Y stepper service started");
   updateStepperVars();
   update_status("Stepper variables assigned after generation");
 }
 
+class serverCallbacks : public NimBLEServerCallbacks
+{
+    void onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo) override 
+    { 
+      Serial.println("New BLE device connected.");
+      deviceConnected = true; 
+      NimBLEDevice::stopAdvertising();
+      Serial.println("Advertising stopped.");
+    };
+
+    void onDisconnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo, int reason) override 
+    {
+        Serial.println("BLE device disconnected.");
+        deviceConnected = false;
+        NimBLEDevice::startAdvertising();
+        Serial.println("Advertising started.");
+    };
+} serverCallbacks;
+
+class pCallbacks : public NimBLECharacteristicCallbacks 
+{
+  void onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) 
+  {
+    Serial.println("Characteristic onWrite triggered.");
+    String cmd = pCharacteristic->getValue();
+    if (cmd.length() > 0) 
+    {
+      Serial.println("Characteristic event, written: ");
+      Serial.println(cmd); // Print the command
+      handle_input(cmd);
+    }
+  };
+  void onRead(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo)
+  {
+      Serial.println("Characteristic onRead triggered.");
+  };
+} pCallbacks;
+
 void initialize_BLE()
 {
   update_status("BLE starting...");
   NimBLEDevice::init("XYFLY");
+
   if(NimBLEDevice::isInitialized()){update_status("BLE started.");}
   //Attempt to set the dBm to +3
   if(NimBLEDevice::setPower(3)){update_status("BLE dBm set to +3");} 
+  NimBLEDevice::setSecurityAuth(true, true, true);
+  NimBLEDevice::setSecurityPasskey(124568);
+  NimBLEDevice::setSecurityIOCap(BLE_HS_IO_DISPLAY_ONLY);
+
   NimBLEServer*         pServer                  = NimBLEDevice::createServer();
   pServer->setCallbacks(&serverCallbacks);
   pServer->advertiseOnDisconnect(true);
   NimBLEService*        pService                 = pServer->createService(SERVICE_UUID);
   NimBLECharacteristic* pCharacteristic = pService->createCharacteristic(CMD_CHARACTERISTIC_UUID, 
                                                                         NIMBLE_PROPERTY::READ |
-                                                                        NIMBLE_PROPERTY::WRITE |
-                                                                        NIMBLE_PROPERTY::NOTIFY |
-                                                                        NIMBLE_PROPERTY::INDICATE);
+                                                                        NIMBLE_PROPERTY::WRITE);
   pCharacteristic->setCallbacks(&pCallbacks);
   pService->start();
   pCharacteristic->setValue("BLE_STARTED");
+
   NimBLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();
   pAdvertising->addServiceUUID(SERVICE_UUID);
   // Allow anyone to scan and connect (very unsafe) FIX THIS TO A PIN SECURE SERVER ASAP
