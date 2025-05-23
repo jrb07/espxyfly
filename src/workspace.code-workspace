@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"functional": "cpp"
+		},
+		"liveServer.settings.multiRootWorkspaceName": "espxyfly",
+		"files.autoSave": "afterDelay",
+		"dotnet.defaultSolution": "build/esp32_xyfly.sln",
+		"C_Cpp.default.compilerPath": "",
+		"r.lsp.promptToInstall": false
+	}
+}
