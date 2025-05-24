@@ -54,20 +54,7 @@ bool fillAll = false;
 bool joystickMode = false;
 int joyX = 0;
 int joyY = 0;
-int threshold = 10;
-
-// Filesystem
-#include <LittleFS.h>
-String ssid = "XYFLYAP";//This is the ID of the network that the display server will host and this device will connect to
-String pass = "";
-String apssid = "";//This is the ID of the network this device would host if it cannot connect to the display server- not in use currently
-
-// Onboard functionalities such as onboard LED
-#define ONBOARD_LED_PIN 2
-
-// Timer functions to keep up with syncing the display hardware if in use
-int timer0 = 0;
-bool timerBreak = false;
+int threshold = 10; //Should change this to scale with a factor called sensitivity to make it more easy to understand
 
 //BLE
 #include <NimBLEDevice.h>
@@ -82,6 +69,7 @@ void update_status(String updated_status)
 {
   debugln("STATUS UPDATE: ");
   debug(updated_status);
+  debugln();
   debugln();
 }
 
@@ -149,7 +137,7 @@ void fillAllVials()
 //Function that is called when the BLE device is done advertising.
 void onAdvComplete(NimBLEAdvertising* pAdvertising) 
 {
-    update_status("Advertising stopped");
+    update_status("onAdvComplete() called.");
     if (deviceConnected) 
     {
       update_status("Device is still connected. If device disconnects then auto-restart advertising.");
@@ -233,6 +221,7 @@ void toggle_pump()
   }
 }
 
+//Take a string input and parse it into a target x and y position
 void parseXY(String input)
 {
   float goX = input.substring(input.indexOf("goX")+3, input.indexOf("goY")).toFloat();
@@ -302,7 +291,7 @@ void updateSpeed(String input)
 //Switch on a String value to control logic flow through the web based UI
 void handle_input(String input)
 {
-    sprintf(buffer, "Input from motion controller: %s", input.c_str());
+    sprintf(buffer, "Input command received as: %s", input.c_str());
     update_status(buffer);
     if(input == "reset"){update_status("HARD RESET");delay(1000);ESP.restart();}//hard reset
     if(input == "stop"){stepperX.emergencyStop();stepperY.emergencyStop();fillAll = false;}//emergency stop all operations
@@ -413,15 +402,15 @@ void initialize_BLE()
   if(NimBLEDevice::isInitialized()){update_status("BLE started.");}
   //Attempt to set the dBm to +3
   if(NimBLEDevice::setPower(3)){update_status("BLE dBm set to +3");} 
-  NimBLEDevice::setSecurityAuth(true, true, true);
-  NimBLEDevice::setSecurityPasskey(124568);
-  NimBLEDevice::setSecurityIOCap(BLE_HS_IO_DISPLAY_ONLY);
+  // NimBLEDevice::setSecurityAuth(true, true, true);
+  // NimBLEDevice::setSecurityPasskey(124568);
+  // NimBLEDevice::setSecurityIOCap(BLE_HS_IO_DISPLAY_ONLY);
 
   NimBLEServer*         pServer                  = NimBLEDevice::createServer();
   pServer->setCallbacks(&serverCallbacks);
   pServer->advertiseOnDisconnect(true);
   NimBLEService*        pService                 = pServer->createService(SERVICE_UUID);
-  NimBLECharacteristic* pCharacteristic = pService->createCharacteristic(CMD_CHARACTERISTIC_UUID, 
+  NimBLECharacteristic* pCharacteristic          = pService->createCharacteristic(CMD_CHARACTERISTIC_UUID, 
                                                                         NIMBLE_PROPERTY::READ |
                                                                         NIMBLE_PROPERTY::WRITE);
   pCharacteristic->setCallbacks(&pCallbacks);
@@ -431,6 +420,7 @@ void initialize_BLE()
   NimBLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();
   pAdvertising->addServiceUUID(SERVICE_UUID);
   // Allow anyone to scan and connect (very unsafe) FIX THIS TO A PIN SECURE SERVER ASAP
+  // This may be okay since we can only connect to 1 device at a time
   pAdvertising->setScanFilter(false, false);
   pAdvertising->setName("XYFLYBLE");
   pAdvertising->setDiscoverableMode(BLE_GAP_DISC_MODE_GEN);

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>ESP32 Web BLE App</title>
+    <title>XYFLYBLE</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
@@ -200,23 +200,14 @@
     </style>
 </head>
 <body>
-  <h1>ESP32 Web BLE Application</h1>
+  <h1>XYFLYBLE</h1>
+  <h2>Auto Mating Flies</h2>
   <button id="connectBleButton">Connect to BLE Device</button>
   <button id="disconnectBleButton">Disconnect BLE Device</button>
   <p>BLE state: <strong><span id="bleState" style="color:#d13a30;">Disconnected</span></strong></p>
-  <h2>pCharacteristic value</h2>
-  <p><span id="valueContainer">NaN</span>
-    <br>
-    <input type="text" id="cmdInput", name ="cmdInput">
-    <button id="sendCmdButton">Send command</button>
-    <br>
-  </p>
-  <p>Last reading datetime: <span id="timestamp"></span></p>
   <!-- Begin old scrip -->
   <div class="grid-container">
       <div class="container">
-        <h1>XYFLY</h1>
-        <h2>Auto Mating Flies</h2>
         <div class="statuscontainer">
           <p>Status: <span class="textcontainer" id="main_status"></span></p>
         </div>
@@ -283,6 +274,12 @@
           <p id="debug_parent" style="visibility: hidden;">Debug: <span class="textcontainer" id="debug_text">???</span></p>
         </div>
       </div>
+      <h2>Last command: 
+        <p><span id="valueContainer">NaN</span></h2>
+          <input type="text" id="cmdInput", name ="cmdInput">
+          <button id="sendCmdButton">Send command</button>
+        </p>
+  <p>Last reading datetime: <span id="timestamp"></span></p>
     </div>
     <script>
     // var xhr = new XMLHttpRequest();
