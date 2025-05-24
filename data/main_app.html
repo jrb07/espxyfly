@@ -280,6 +280,86 @@
           <button id="sendCmdButton">Send command</button>
         </p>
   <p>Last reading datetime: <span id="timestamp"></span></p>
+=======
+  <h2>pCharacteristic value</h2>
+  <p><span id="valueContainer">NaN</span>
+    <br>
+    <input type="text" id="cmdInput", name ="cmdInput">
+    <button id="sendCmdButton">Send command</button>
+    <br>
+  </p>
+  <p>Last reading datetime: <span id="timestamp"></span></p>
+  <!-- Begin old scrip -->
+  <div class="grid-container">
+      <div class="container">
+        <h1>XYFLY</h1>
+        <h2>Auto Mating Flies</h2>
+        <div class="statuscontainer">
+          <p>Status: <span class="textcontainer" id="main_status"></span></p>
+        </div>
+      </div>
+      <div></div>
+      <div class="container">
+        <input type="button" value="Go home" id="go_home_button">
+        <input type="button" value="Set home" id="set_home_button">
+        <input type="button" value="Find home" id="find_home_button">
+      </div>
+      <div></div>
+      <div class="grid-container-xy">
+        <div>
+          <input type="range" min="0" max="100" value="0" step="10" class="sliderX" id="sliderX">
+        </div>
+        <div>
+          <input type="range" min="0" max="100" value="0" step="10" class="sliderY" id="sliderY">
+          <canvas id="canvas_element" width="100" height="100" class="canvas"></canvas>
+          <input type="button" value="Go to target" id="goto_target_button">
+          <p>Target (x, y): <span class="textcontainer" id="rect_pos_text"></span></p>
+        </div>
+      </div>
+      <div>
+        <div>
+          <input type="checkbox" name="follow_checkbox" id="follow_checkbox">
+          <label for="follow_checkbox">Follow mode</label>
+        </div>
+      </div>
+      <div class="container">
+        <input type="button" value="Run main" id="run_main_button">
+        <input type="button" value="Stop main" id="stop_main_button">
+        <input type="button" value="Dispense 1 second" id="dispense1s_button">
+        <input type="button" value="Dispense infinite" id="dispense_button">
+      </div>
+      <div class="container">
+        <div class="grid-container">
+          <input type="button" value="Up (X-)" id="jog_up_button">
+          <input type="button" value="Down (X+)" id="jog_down_button">
+          <input type="button" value="Left (Y+)" id="jog_left_button">
+          <input type="button" value="Right (Y-)" id="jog_right_button">
+        </div>
+        <input type="button" value="Stop X Motor" id="stopX_button">
+        <input type="button" value="Stop Y Motor" id="stopY_button">
+        <input type="button" value="Stop ALL Motors" id="stop_button">
+      </div>
+      <div class="grid-container">
+        <input type="button" value="Microsteps: 1" id="microstep1_button">    
+        <input type="button" value="Microsteps: 2" id="microstep2_button">    
+        <input type="button" value="Microsteps: 4" id="microstep4_button">
+        <input type="button" value="Microsteps: 8" id="microstep8_button">
+        <input type="button" value="Microsteps: 16" id="microstep16_button">
+        <input type="button" value="Microsteps: 32" id="microstep32_button">
+        <input type="range" min="500" max="100000" value="80000" step="500" class="slider" id="sliderSpeed">
+        <input type="button" value="Set speed" id="speed_button">
+        <p>Speed (steps per second): <span class="textcontainer" id="target_speed_text">4000</span></p>
+      </div>
+      <div></div>
+      <div>
+        <input type="checkbox" name ="joystickCheckbox" id="joystick_checkbox">
+        <label for="joystickCheckbox">Joystick mode</label>
+        <input type="checkbox" name ="debugCheckbox" id="debug_checkbox">
+		<label for="debugCheckbox">Debug mode</label>
+        <div class="grid-container" style="grid-template-columns: auto auto auto;">
+          <p id="debug_parent" style="visibility: hidden;">Debug: <span class="textcontainer" id="debug_text">???</span></p>
+        </div>
+      </div>
     </div>
     <script>
     // var xhr = new XMLHttpRequest();
