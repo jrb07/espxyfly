@@ -8,18 +8,23 @@
 #define debug(x) Serial.print(x)
 #define debugln(x) Serial.println(x)
 
-// Variables for parsing commands from the user
-char buffer[512];
-char character; 
-
-// Stepper associated variables
-#include <ESP_FlexyStepper.h>
+//Define pins
+#define PUMP_RELAY_PIN 18
 #define LIMIT_SWITCH_PIN_X 5
 #define LIMIT_SWITCH_PIN_Y 25
 #define STEP_PIN_X 14
 #define DIR_PIN_X 12
 #define STEP_PIN_Y 13
 #define DIR_PIN_Y 15
+#define JOYSTICK_PIN_X 26 //USER INPUT PIN******
+#define JOYSTICK_PIN_Y 27 //USER INPUT PIN******
+
+// Variables for parsing commands from the user
+char buffer[512];
+char character; 
+
+// Stepper associated variables
+#include <ESP_FlexyStepper.h>
 //198720 is the number of steps to travel a full length at 32 microsteps per step
 //    Transition from step number to distance so fullLengthMM is 250mm
 //To calculate the stepDivisor take the microStep and divide by the max microStep (32) for example:
@@ -42,15 +47,14 @@ int yTarget = 0;
 ESP_FlexyStepper stepperX, stepperY;
 
 // Pump
-#define PUMP_RELAY_PIN 18
+
 int duration = 1000;//duration in milliseconds
 float pumpRate = 1;//pumping rate in mL/s
 bool pumping = false;
 bool fillAll = false;
 
 // Joystick
-#define JOYSTICK_PIN_X 26 //USER INPUT PIN******
-#define JOYSTICK_PIN_Y 27 //USER INPUT PIN******
+
 bool joystickMode = false;
 int joyX = 0;
 int joyY = 0;
