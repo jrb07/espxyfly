@@ -1,17 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <CustomBuild Include="D:\Documents\PlatformIO\Projects\espxyfly\build\CMakeFiles\b39756431feb69db96a19e95c50c0ba7\Continuous.rule">
+    <CustomBuild Include="D:\Documents\Development\PlatformIO\Projects\espxyfly\build\CMakeFiles\cfe198490b5e00a1cd5a8fd01ba1522b\Continuous.rule">
       <Filter>CMake Rules</Filter>
     </CustomBuild>
-    <CustomBuild Include="D:\Documents\PlatformIO\Projects\espxyfly\CMakeLists.txt" />
+    <CustomBuild Include="D:\Documents\Development\PlatformIO\Projects\espxyfly\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="D:\Documents\PlatformIO\Projects\espxyfly\build\CMakeFiles\Continuous" />
+    <None Include="D:\Documents\Development\PlatformIO\Projects\espxyfly\build\CMakeFiles\Continuous" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CMake Rules">
-      <UniqueIdentifier>{731D552F-5A66-3C03-B165-F015A0916636}</UniqueIdentifier>
+      <UniqueIdentifier>{E83EF6C7-96AE-3E62-87B8-A408254386D2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
