@@ -1,4 +1,8 @@
  /* 
+Read the README
+
+Open the main_app.html in a browser with BLE to interact with the device!
+
  Git cmds for me:
     git config credential.helper store
     git push https://github.com/jrb07/espxyfly.git
@@ -47,7 +51,7 @@ int fullLengthSteps = fullLengthSteps32/stepFactor;//number of steps to travel a
 int stepsPerMM32 = fullLengthSteps32/fullLengthMM;
 int stepsPerMM = stepsPerMM32/stepFactor;//scale the stepsPerMM using the current microStep
 int segmentLen = fullLengthSteps/numSubdivisions;//this is the number of steps per segment length defined by the number of subdivisions
-int SPEED_IN_STEPS_PER_SECOND = 5000;
+int SPEED_IN_STEPS_PER_SECOND = 5999;
 int ACCELERATION_IN_STEPS_PER_SECOND = SPEED_IN_STEPS_PER_SECOND;
 int DECELERATION_IN_STEPS_PER_SECOND = SPEED_IN_STEPS_PER_SECOND;
 int xTarget = fullLengthSteps;
@@ -104,7 +108,7 @@ void loop(){idle();}
 void idle()
 {
   delayMicroseconds(1);
-  handleMain();
+  handle_main();
 }
 
 // Update the accelerations, deecelerations, speeds, stepFactor, stepsPerMM, segmentLen, and set stepsPerMM for both steppers
@@ -175,7 +179,7 @@ void onAdvComplete(NimBLEAdvertising* pAdvertising)
 }
 
 // Move the motors and search for the limit switches...
-void handleMain()
+void handle_main()
 {  
   //Handle homing operations before moving any steppers
   handle_homing();
@@ -199,8 +203,8 @@ void handle_homing()
     stepperX.setCurrentPositionAsHomeAndStop();
     search_for_limit_X = false;
     update_status("X home set. Search finished.");
-    stepperX.moveRelativeInMillimeters(2);
-    update_status("X stepper is now performing a 2 mm bounce off X limit!");
+    stepperX.moveRelativeInMillimeters(11);
+    update_status("X stepper is now performing an 11 mm bounce off X limit!");
     stepperX.setCurrentPositionAsHomeAndStop();
     //Reset the limit switch state
     xLimitSwitchState = 0;
@@ -214,42 +218,23 @@ void handle_homing()
     stepperY.setCurrentPositionAsHomeAndStop();
     search_for_limit_Y = false;
     update_status("Y home set. Search finished.");
-    stepperY.moveRelativeInMillimeters(-2);
-    update_status("Y stepper is now performing a -2 mm bounce off Y limit!");
+    stepperY.moveRelativeInMillimeters(-13);
+    update_status("Y stepper is now performing a -13 mm bounce off Y limit!");
     stepperY.setCurrentPositionAsHomeAndStop();
     //Reset the limit switch state
     yLimitSwitchState = 0;
   }
 
-  //Check if we are searching for the X or Y limit aka finding home
-  if(search_for_limit_X)
+  //if we have gotten to the perceived home position but are still searching for home then call the find_home function again
+  if(stepperX.getCurrentPositionInSteps() == 0 && search_for_limit_X)
   {
-    if(xTarget != 0)
-   {//if we are not at 0 then try to set the target to 0
-    update_status("Searching for X limit...");
-    update_status("X target set to 0");
-    xTarget = 0;
-   }else if(stepperX.getCurrentPositionInSteps() == 0 && xTarget != -fullLengthSteps)
-   {//if we have reached 0 but still havent found the limit then keep going further
-    update_status("Initial search for X limit failure...");
-    update_status("X target set to -fullLengthSteps");
-    xTarget = -fullLengthSteps;
-   }
+    find_home();
   }
-  if(search_for_limit_Y)
+  if(stepperY.getCurrentPositionInSteps() == 0 &&  search_for_limit_Y)
   {
-    if(yTarget != 0)
-    {//if we are not at 0 then try to set the target to 0
-      update_status("Searching for Y limit...");
-      update_status("Y target set to 0");
-      yTarget = 0;
-    }else if(stepperY.getCurrentPositionInSteps() == 0 && yTarget != fullLengthSteps)
-   {//if we have reached 0 but still havent found the limit then keep going further
-    update_status("Initial search for Y limit failure...");
-    update_status("Y target set to fullLengthSteps");
-    yTarget = fullLengthSteps;
-   }
+    find_home();
   }
+
 }
 
 //Process movement for the X and Y stepper if either are not at their target position.
@@ -259,6 +244,11 @@ void handle_movement()
   if(xTarget != stepperX.getCurrentPositionInSteps())
   {
     stepperX.processMovement();
+    //if we are moving faster than 6000 steps per second then we need to move one stepper at a time to prevent overpower
+    if(SPEED_IN_STEPS_PER_SECOND >= 6000)
+    {
+      return;
+    }
   }
   if(yTarget != stepperY.getCurrentPositionInSteps())
   {
@@ -292,8 +282,12 @@ void go_home()
 void set_home()
 {       
   update_status("Setting home...");
+  search_for_limit_X = false;
+  search_for_limit_Y = false;
   stepperX.setCurrentPositionAsHomeAndStop();
+  xTarget = 0;
   stepperY.setCurrentPositionAsHomeAndStop();
+  yTarget = 0;
 }
 
 //Find the limit switches and set that position as home then bounce
@@ -305,8 +299,12 @@ void find_home()
   update_status("Starting search for Y limit switch to acquire new Y stepper home.");
   search_for_limit_Y = true;
 
-  //must set the target to not zero otherwise we will not home
-  move_to_X_Y(-fullLengthSteps, -fullLengthSteps);//the Y target will get inverted again by the move_to_X_Y() fn
+  // Set the perceived stepper positions to the end of each axis of travel then tell them to go to the opposite end of the inverted axis
+  stepperX.setCurrentPositionInSteps(fullLengthSteps);
+  stepperY.setCurrentPositionInSteps(-fullLengthSteps);
+
+  //Set to zero and if not home then find home again
+  move_to_X_Y(0, 0);
   delay(100);
 }
 
@@ -365,11 +363,11 @@ void parseXY(String input)
 void move_to_X_Y(float _x, float _y)
 {
   xTarget = round(_x);
-  yTarget = round(-_y);
-  sprintf(buffer, "Set stepper target step position [X:%i, Y:%i]", xTarget, yTarget);
+  yTarget = round(_y);
+  sprintf(buffer, "Set stepper target step position [X:%i, Y:%i]", xTarget, -yTarget);
   debugln(buffer);
   stepperX.setTargetPositionInSteps(xTarget);
-  stepperY.setTargetPositionInSteps(yTarget);
+  stepperY.setTargetPositionInSteps(-yTarget);
 }
 
 //Move to the previous x position
