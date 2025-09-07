@@ -1,4 +1,8 @@
  /* 
+Read the README
+
+Open the main_app.html in a browser with BLE to interact with the device!
+
  Git cmds for me:
     git config credential.helper store
     git push https://github.com/jrb07/espxyfly.git
