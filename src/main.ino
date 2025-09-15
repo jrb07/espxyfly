@@ -81,9 +81,9 @@ uint32_t              value              = 0;
 //Function that takes in a String and then outputs that String to all displays in this project
 void update_status(String updated_status)
 {
+  debugln();
   debugln("STATUS UPDATE: ");
   debug(updated_status);
-  debugln();
   debugln();
 }
 
@@ -549,8 +549,8 @@ void initialize_BLE()
   pServer->advertiseOnDisconnect(true);
   NimBLEService*        pService                 = pServer->createService(SERVICE_UUID);
   NimBLECharacteristic* pCharacteristic          = pService->createCharacteristic(CMD_CHARACTERISTIC_UUID, 
-                                                                        NIMBLE_PROPERTY::READ |
-                                                                        NIMBLE_PROPERTY::WRITE);
+                                                                                  NIMBLE_PROPERTY::READ
+                                                                                  NIMBLE_PROPERTY::WRITE);
   pCharacteristic->setCallbacks(&pCallbacks);
   pService->start();
   pCharacteristic->setValue("BLE_STARTED");

@@ -246,10 +246,10 @@
 		</div>
 		<div class="container">
 		<div class="grid-container">
-		  <input type="button" value="Up (Y+)" id="jog_up_button">
-		  <input type="button" value="Down (Y-)" id="jog_down_button">
-		  <input type="button" value="Left (X-)" id="jog_left_button">
-		  <input type="button" value="Right (X+)" id="jog_right_button">
+		  <input type="button" value="Up       (X-)" id="jog_up_button">
+		  <input type="button" value="Down  (X+)" id="jog_down_button">
+		  <input type="button" value="Left     (Y-)" id="jog_left_button">
+		  <input type="button" value="Right    (Y+)" id="jog_right_button">
 		</div>
 		<input type="button" value="Stop X Motor" id="stopX_button">
 		<input type="button" value="Stop Y Motor" id="stopY_button">
@@ -270,11 +270,6 @@
 		<div>
 		<input type="checkbox" name ="joystickCheckbox" id="joystick_checkbox">
 		<label for="joystickCheckbox">Joystick mode</label>
-		<input type="checkbox" name ="debugCheckbox" id="debug_checkbox">
-		<label for="debugCheckbox">Debug mode</label>
-		<div class="grid-container" style="grid-template-columns: auto auto auto;">
-		  <p id="debug_parent" style="visibility: hidden;">Debug: <span class="textcontainer" id="debug_text">???</span></p>
-		</div>
 		</div>
 		<div>
 		<h2>Last command: <p><span id="valueContainer">NaN</span></h2>
@@ -325,9 +320,6 @@
 	var command = "";
 	var follow_checkbox = document.getElementById('follow_checkbox');
 	var joystick_checkbox = document.getElementById('joystick_checkbox');
-	var debug_checkbox = document.getElementById('debug_checkbox');
-	var debug_text = document.getElementById('debug_text');
-	var debug_parent = document.getElementById('debug_parent');
 	var xcal_button = document.getElementById('xcal_button');
 	var mouseDown = 0;
 
@@ -448,37 +440,6 @@
 		writeOnCharacteristic("joy0");
 	  }
 	}
-	debug_checkbox.onchange = function(evt)
-	{
-	  if(debug_checkbox.checked)
-	  {
-		main_status.innerHTML = "Debugging enabled";
-		debug_parent.style.visibility = "visible";
-		writeOnCharacteristic("debug1");
-	  }else
-	  {
-		main_status.innerHTML = "Debugging disabled";
-		debug_parent.style.visibility = "hidden";
-		writeOnCharacteristic("debug0");
-	  }
-	  if(!!window.EventSource)
-	  {
-		var source = new EventSource('/events');
-		source.addEventListener('open', function(e) {
-			console.log("Events Connected");
-		}, false);
-		source.addEventListener('error', function(e) {
-			if (e.target.readyState != EventSource.OPEN) {
-			  console.log("Events Disconnected");
-			}
-		}, false);
-		source.addEventListener('debug', function(e) 
-		{
-			console.log("debug message", e.data);
-			debug_text.innerHTML = e.data;
-		}, false);
-	  }
-	}
 	//The buttons below send a specific command to the ESP32 using the xhr.open() and xhr.send() functions
 	speed_button.onclick = function()
 	{
@@ -504,12 +465,12 @@
 	}
 	jog_left_button.onclick = function()
 	{
-	  main_status.innerHTML = "Jog right (-X)";
+	  main_status.innerHTML = "Jog up (-X)";
 	  writeOnCharacteristic("prevX");
 	}
 	jog_right_button.onclick = function()
 	{
-	  main_status.innerHTML = "Jog left (+X)";
+	  main_status.innerHTML = "Jog down (+X)";
 	  writeOnCharacteristic("nextX");
 	}
 	stopX_button.onclick = function()
@@ -519,12 +480,12 @@
 	}
 	jog_up_button.onclick = function()
 	{
-	  main_status.innerHTML = "Jog up (+Y)";
+	  main_status.innerHTML = "Jog right (+Y)";
 	   writeOnCharacteristic("nextY");
 	}
 	jog_down_button.onclick = function()
 	{
-	  main_status.innerHTML = "Jog down (-Y)";
+	  main_status.innerHTML = "Jog left (-Y)";
 	   writeOnCharacteristic("prevY");
 	}
 	stopY_button.onclick = function()
