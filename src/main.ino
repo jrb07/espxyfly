@@ -385,6 +385,14 @@ void find_home()
   delay(100);
 }
 
+//handle the joystick toggling using user input in form of String with a 0 for off or a 1 for on
+void handleJoy(String input)
+{
+   if(input == "joy1")      { joystickMode =  true;   update_status("Joystick engaged");         }
+   else if(input == "joy0") { joystickMode =  false;  update_status("Joystick disengaged");      }
+   else                     {                         update_status("Joystick input CORRUPTED"); }
+}
+
 //Take 10000 steps to determine the distance per 10000 steps
 void calibrate_steps_X()
 {
@@ -402,9 +410,15 @@ void parseStepCal(String input)
 //Use a specified amount of ON time (10s) to calibrate the amount of fluid dispensed in that time period
 void calibrate_pump()
 {
+  
   digitalWrite(PUMP_RELAY_PIN, LOW);
   delay(10000);
   digitalWrite(PUMP_RELAY_PIN, HIGH);
+}
+
+void calibrate_pumpRate(String input)
+{
+  pumpRate = float(input.substring(input.indexOf(".")+1, input.length()).toFloat())/1000;
 }
 
 //Turn the pump on for a specified amount of time in milliseconds or default to the default amount of time
@@ -518,7 +532,7 @@ void handle_input(String input)
 {
     sprintf(buffer, "Input command received as: %s", input.c_str());
     update_status(buffer);
-    if(input == "sequence")                   {handleCommandSequence(input);}
+    if(input == "sequence")                   {handleCommandSequence(input);}                         //handle user defined command sequences as custom experiments
     if(input == "reset")                      {resetDevice();}                                        //hard reset
     if(input == "stop")                       {emergencyStop();}                                      //emergency stop all operations
     if(input == "stopX")                      {stepperX.emergencyStop();}                             //emergency stop for x stepper
@@ -539,14 +553,12 @@ void handle_input(String input)
     if(input == "up")                         {stepperY.startJogging(-1);}                            //move y stepper in positive direction
     if(input == "down")                       {stepperY.startJogging(1);}                             //move y stepper in negative direction
     if(input == "pump1s")                     {calibrate_pump();}                                     //activate the pump for one second
-    if(input.indexOf("volume") == 0)          {pump_volume(input);}                                    //output volume of liquid using peristaltic pump
-    if(input.indexOf("calibrate") == 0)             {pumpRate = float(input.substring(input.indexOf(".")+1, 
-                                                                input.length()).toFloat())/1000;}     //calibrate pump rate with user input
+    if(input.indexOf("volume") == 0)          {pump_volume(input);}                                   //output volume of liquid using peristaltic pump
+    if(input.indexOf("calibrate") == 0)       {calibrate_pumpRate(input);}                            //calibrate pump rate in milliliters per second with user input
     if(input.indexOf("goX") == 0)             {parseXY(input);}                                       //Parse string XY then go to position x, y
     if(input.indexOf("microstep") == 0)       {parseMicrostep(input);}                                //Update the microStep variable and all derivatives
     if(input.indexOf("speed") == 0)           {updateSpeed(input);}                                   //set the speed in steps per second
-    if(input.indexOf("joy") == 0)             { if(input == "joy1"){joystickMode=true;}
-                                                if(input == "joy0"){joystickMode=false;}}             //toggle the joystick mode
+    if(input.indexOf("joy") == 0)             {handleJoy(input);}                                     //toggle the joystick mode
     if(input.indexOf("mmper10000steps") == 0) {parseStepCal(input);}                                  //Take the number of mm traveled in 10000 steps and use it to calculate stepsPerMM
     if(input == "stepX")                      {calibrate_steps_X();}                                  //calibrate the distance moved in 1000 steps in the positive direction from the current position using the x stepper
     if(input == "DISPLAY")                    {update_status("Received message from display-server");}// this is a test message sent to confirm that the espnow connection is alive
