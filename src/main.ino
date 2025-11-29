@@ -1,9 +1,9 @@
  /* 
-Read the README
+Read the README and TODO markdown files for more information about this project.
 
-Open the main_app.html in a browser with BLE to interact with the device!
+Open the main_app.html in a browser (on any device with a browser and bluetooth) to interact with the device!
 
- Git cmds for me:
+ Git cmds help section:
     git config credential.helper store
     git push https://github.com/jrb07/espxyfly.git
 */
@@ -35,68 +35,128 @@ bool search_for_limit_Y = true;
 char buffer[512];
 char character; 
 
-// Stepper associated variables
-//198720 is the number of steps to travel a full length of 250mm at 32 microsteps per step
-//    Transition from step number to distance so fullLengthMM is 250mm
-//To calculate the stepFactor take the microStep and divide by the max microStep (32) for example:
-//    (32/microStep = stepFactor)
-//    (32/2 = 16) (32/4 = 8) (32/8 = 4) (32/16 = 2) (32/32 = 1)
+/* 
+Stepper associated variables:
+Number of steps per full length = 198720 steps
+                   fullLengthMM = 250 mm
+                   stepsPerMM32 = 0.0013 mm/step or 1.3 micrometers/step
+To calculate the stepFactor take the microStep and divide by the max microStep (32) for example:
+    (32/microStep = stepFactor) this will allow us to adjust between alternate microStep settings in realtime
+    (32/2 = 16) (32/4 = 8) (32/8 = 4) (32/16 = 2) (32/32 = 1) dividing by 2 or 4 etc... reduces the number of steps since they will now be larger in distance
+    DERECIATED microStep was a user defined variable but now we will adjust stepper speed by user input only through FlexyStepper library functions
+*/
 #include <ESP_FlexyStepper.h>
-int numSubdivisions = 10;
+int numSubdivisions = 10;//the number of segments to divide the X and Y axes into
+
 int microStep = 32;//this is the default microstep but can be changed by the client through the server
 int stepFactor = 32/microStep;// 32/32 = 1; 32/16 = 2; etc...
+
 int fullLengthMM = 266;//this is the full length of the axis measured experimentally
 int fullLengthSteps32 = 180000;//number of steps to travel a full length at 32 microsteps
-int fullLengthSteps = fullLengthSteps32/stepFactor;//number of steps to travel a full length at 32 microsteps
+int fullLengthSteps = fullLengthSteps32/stepFactor;//number of steps to travel a full length at 32 microsteps adjusted by our microstep factor delta
+
 int stepsPerMM32 = fullLengthSteps32/fullLengthMM;
 int stepsPerMM = stepsPerMM32/stepFactor;//scale the stepsPerMM using the current microStep
 int segmentLen = fullLengthSteps/numSubdivisions;//this is the number of steps per segment length defined by the number of subdivisions
-int SPEED_IN_STEPS_PER_SECOND = 5999;
+
+int SPEED_IN_STEPS_PER_SECOND = 6000;
 int ACCELERATION_IN_STEPS_PER_SECOND = SPEED_IN_STEPS_PER_SECOND;
 int DECELERATION_IN_STEPS_PER_SECOND = SPEED_IN_STEPS_PER_SECOND;
+
 int xTarget = fullLengthSteps;
 int yTarget = fullLengthSteps;
 ESP_FlexyStepper stepperX, stepperY;
 
 // Pump
-int duration = 1000;//duration in milliseconds
-float pumpRate = 1;//pumping rate in mL/s
-bool pumping = false;
-bool fillAll = false;
+int duration            = 1000;//duration in milliseconds
+float pumpRate          = 1;//pumping rate in mL/s
+bool pumping            = false;//a boolean to keep track of if we have turned the pump on or off
+unsigned long pumpStart = millis();//the pump starting time to keep up with async pumping operations
 
 // Joystick
 bool joystickMode = false;
-int joyX = 0;
-int joyY = 0;
-int threshold = 10; //Should change this to scale with a factor called sensitivity to make it more easy to understand
+int joyX          = 0;
+int joyY          = 0;
+int sennsitivity  = 10;
 
 //BLE
 #include <NimBLEDevice.h>
-#define SERVICE_UUID            "d6d3eb5e-ddaf-492c-af4e-19323edf8fad"
+#define SERVICE_UUID "d6d3eb5e-ddaf-492c-af4e-19323edf8fad"
 #define CMD_CHARACTERISTIC_UUID "c57884e4-fae7-4370-81cf-6b4919b28042"
-NimBLECharacteristic* pCharacteristic    = nullptr;
-bool                  deviceConnected    = false;
-uint32_t              value              = 0;
+NimBLECharacteristic* pCharacteristic = nullptr;
+bool deviceConnected = false;
+uint32_t value = 0;
+
+/*
+These variables allow for Experiments to be stored and executed at specific XY locations stored as points
+  description will describe this experiment
+  commands will be populated with a series of text commands
+    the sets of comands and delays etc... between commands
+*/
+struct Experiment
+{
+  int experimentID = 0;
+  int commandID   = 0;
+  unsigned long executionStart;
+  unsigned long executionEnd;
+  String description;
+  String commands[100];
+  String title;
+};
+
+struct ExperimentManager
+{
+  Experiment experiments[10];//10 experiments max per manager as of now
+};
+
+ExperimentManager experimentManager;
+bool executingExperiments = false;
+int experimentID = 0;
+int commandID = 0;
+
+//JSON for experiment read and write to SPIFFS
+JsonDocument doc;
+
+//LittleFS to open the JSON document in our SPIFFS
+#include "FS.h"
+#include <LITTLEFS.h>
+
+// Parse JSON object
+void parseJSONtoExperiments()
+{
+  File file = fs.open("/experiments.json");
+    if(!file || file.isDirectory()){
+        Serial.println("- failed to open file for reading");
+        return;
+    }
+
+    Serial.println("- read from file:");
+    while(file.available()){
+        Serial.write(file.read());
+    }
+    
+  DeserializationError error = deserializeJson(doc, file);
+  if (error) 
+  {
+    Serial.print(F("deserializeJson() failed: "));
+    Serial.println(error.f_str());
+    file.close();
+    return;
+  }
+
+  // Extract values
+  Serial.println(F("Response:"));
+  Serial.println(doc["experiments"].as<String[]>());
+  file.close();
+}
 
 //Function that takes in a String and then outputs that String to all displays in this project
 void update_status(String updated_status)
 {
+  debugln();
   debugln("STATUS UPDATE: ");
   debug(updated_status);
   debugln();
-  debugln();
-}
-
-//Turn the pump on for a specified amount of time in milliseconds or default to the default amount of time
-void pump(float _duration = 0)
-{
-  //if no custom duration is sent then set custom duration to default duration
-  if(_duration <= 0){_duration = duration;}
-  sprintf(buffer, "Dispensing for: %f ms", _duration);
-  update_status(buffer);
-  digitalWrite(PUMP_RELAY_PIN, LOW);
-  delay(_duration);
-  digitalWrite(PUMP_RELAY_PIN, HIGH);
 }
 
 // Initialize all the periphreals and BT
@@ -131,40 +191,24 @@ void updateStepperVars()
 }
 
 //Tell the steppers to move to each position and remove each position that has been filled from the list
-void fillAllVials()
+void executeExperiments()
 {
-  update_status("fillAllVials function entered.");
-  //First check if we have reached our x target position
-  if(xTarget == stepperX.getCurrentPositionInSteps())
-  {//if we reached our target position then pump
-    pump();
-    //if we have not reached the last position then move to the next position and break
-    if(xTarget < fullLengthSteps)
-    {
-      update_status("Moving to next X position");
-      move_to_next_X();
-      return;
-    }
-  }
-  //if we have reached the final x position then execute same logic for y position
-  if(yTarget == stepperY.getCurrentPositionInSteps())
-  {//if we reached our target position then pump
-    pump(1000);
-    if(yTarget > -fullLengthSteps)
-    {
-      update_status("Moving to next Y position");
-      move_to_next_Y();
-      return;
-    }
-  }
-  if(xTarget == fullLengthSteps && yTarget == -fullLengthSteps)
+  update_status("Executing all stored experiments...");
+  Experiment targetExp = experimentManager.experiments[experimentID];
+  String currentCommand = targetExp.commands[commandID];
+  handle_input(currentCommand);
+  if(commandID >= 100)
   {
-    //we have reached the final position
-    //go home and set fillallVials to false
-    fillAll = false;
-    go_home();
-    return;
+    experimentID = experimentID + 1;
+    commandID = 0;
   }
+  if(experimentID < 10 && currentCommand != experimentManager.experiments[10].commands[100]){executingExperiments = true;}else{executingExperiments = false;}
+}
+
+void handleCommandSequence(String input)
+{
+  update_status("Received command sequence of : ");
+  update_status(input);
 }
 
 //Function that is called when the BLE device is done advertising.
@@ -173,7 +217,7 @@ void onAdvComplete(NimBLEAdvertising* pAdvertising)
     update_status("onAdvComplete() called.");
     if (deviceConnected) 
     {
-      update_status("Device is still connected. If device disconnects then auto-restart advertising.");
+      update_status("Device is still connected. If device disconnects then it will auto-restart advertising.");
       return;
     }
 }
@@ -181,15 +225,12 @@ void onAdvComplete(NimBLEAdvertising* pAdvertising)
 // Move the motors and search for the limit switches...
 void handle_main()
 {  
-  //Handle homing operations before moving any steppers
-  handle_homing();
-  //Handle stepper movement
+  //Handle async stepper movement
   handle_movement();
-  /*
-    Logic for processing the fillAllVials function which is essentially the main test/debug/example program
-      In the future we can make the program a framework that the end user can iterate on
-  */
-  if(fillAll){fillAllVials();}
+  //Handle async experiment execution
+  handle_experiments();
+  //Handle async pumping
+  handle_pumping();
 }
 
 // Check for limit switch flags and search for limit switches if flag is true/1
@@ -240,6 +281,8 @@ void handle_homing()
 //Process movement for the X and Y stepper if either are not at their target position.
 void handle_movement()
 {
+  //Handle homing operations before moving any steppers
+  handle_homing();
   // If the target position has not been reached the process the x position first then the y position
   if(xTarget != stepperX.getCurrentPositionInSteps())
   {
@@ -253,6 +296,40 @@ void handle_movement()
   if(yTarget != stepperY.getCurrentPositionInSteps())
   {
     stepperY.processMovement();
+  }
+}
+
+void handle_experiments()
+{
+  /*
+    Logic for processing the executeExperiments function which is essentially the main test/debug/example program
+      In the future we can make the program a framework that the end user can iterate on
+  */
+  if(executeExperiments)
+  {
+    update_status("Executing experiments.");
+  }
+}
+
+void handle_pumping()
+{
+  unsigned long timeElapsed = millis()-pumpStart;
+  if(timeElapsed >= duration)
+  {
+    if(pumping)
+    {
+      pumping = false; 
+      update_status("Turning pump off.");
+      digitalWrite(PUMP_RELAY_PIN, HIGH);
+    }
+  }else
+  {
+    if(!pumping)
+    {
+      pumping = true;
+      update_status("Turning pump on.");
+      digitalWrite(PUMP_RELAY_PIN, LOW);
+    }
   }
 }
 
@@ -330,21 +407,29 @@ void calibrate_pump()
   digitalWrite(PUMP_RELAY_PIN, HIGH);
 }
 
+//Turn the pump on for a specified amount of time in milliseconds or default to the default amount of time
+// DEPRECIATED USE ASYNC TOGGLING WITH TIMESTAMPS INSTEAD
+void pump(float _duration = 0)
+{
+  //if no custom duration is sent then set custom duration to default duration
+  if(_duration <= 0){_duration = duration;}
+  sprintf(buffer, "Dispensing for: %f ms", _duration);
+  update_status(buffer);
+  digitalWrite(PUMP_RELAY_PIN, LOW);
+  delay(_duration);
+  digitalWrite(PUMP_RELAY_PIN, HIGH);
+}
+
 //Turn the pump on if it off and off if it is on
 void toggle_pump()
 {
-  if(pumping)
-  {
-    pumping = false; 
-    update_status("Turning pump off.");
-    digitalWrite(PUMP_RELAY_PIN, HIGH);
-  }
-  else
-  {
-    pumping = true; 
-    update_status("Turning pump on.");
-    digitalWrite(PUMP_RELAY_PIN, LOW);
-  }
+  update_status("Call to toggle_pump() is DEPRICIATED");
+}
+
+void pump_volume(String input)
+{
+  duration = int(( input.substring(input.indexOf(".")+1, input.length()).toFloat())/pumpRate);
+  pumpStart = millis();
 }
 
 //Take a string input and parse it into a target x and y position
@@ -410,22 +495,39 @@ void updateSpeed(String input)
   updateStepperVars();
 }
 
-//Switch on a String value to control logic flow through the web based UI
+void emergencyStop()
+{
+  stepperX.emergencyStop();
+  stepperY.emergencyStop();
+  executingExperiments = false;
+}
+
+void resetDevice()
+{
+  update_status("HARD RESET");
+  delay(1000);
+  ESP.restart();
+}
+
+/*
+Description:  Passive structure for commands/keywords sent from the user, or by instruction sets, to be converted to specific function calls.
+String input: A named String variable that represents commands from the user or instruction sets.
+Flow:         Parses the String input using if logic flow to identify commands and execute functions in response to specific keywords.
+*/
 void handle_input(String input)
 {
     sprintf(buffer, "Input command received as: %s", input.c_str());
     update_status(buffer);
-    if(input == "reset")                      {update_status("HARD RESET");delay(1000);ESP.restart();}//hard reset
-    if(input == "stop")                       { stepperX.emergencyStop();
-                                                stepperY.emergencyStop();
-                                                fillAll = false;}                                     //emergency stop all operations
+    if(input == "sequence")                   {handleCommandSequence(input);}
+    if(input == "reset")                      {resetDevice();}                                        //hard reset
+    if(input == "stop")                       {emergencyStop();}                                      //emergency stop all operations
     if(input == "stopX")                      {stepperX.emergencyStop();}                             //emergency stop for x stepper
     if(input == "stopY")                      {stepperY.emergencyStop();}                             //emergency stop for y stepper
     if(input == "gohome")                     {go_home();}                                            //go to 0,0
     if(input == "sethome")                    {set_home();}                                           //set the current position as 0,0
     if(input == "findhome")                   {find_home();}                                          //find home
-    if(input == "fillall")                    {fillAll = true;}                                       //enable async fill operations
-    if(input == "stopfillall")                {fillAll = false;}                                      //halt the async fill operations
+    if(input == "startexperiments")           {executingExperiments = true;}                          //enable async fill operations
+    if(input == "endexperiments")             {executingExperiments = false;}                         //halt the async fill operations
     if(input == "dispense")                   {toggle_pump();}                                        //turn the pump on/off
     if(input == "pump")                       {pump(1000);}                                           //turn the pump on for 1 second then off
     if(input == "nextX")                      {move_to_next_X();}                                     //move to the next X position
@@ -437,11 +539,8 @@ void handle_input(String input)
     if(input == "up")                         {stepperY.startJogging(-1);}                            //move y stepper in positive direction
     if(input == "down")                       {stepperY.startJogging(1);}                             //move y stepper in negative direction
     if(input == "pump1s")                     {calibrate_pump();}                                     //activate the pump for one second
-    if(input == "fullvial")                   {}                                                      //capture a full vial reference image
-    if(input == "emptyvial")                  {}                                                      //capture an empty vial reference image
-    if(input.indexOf("dur") == 0)             {duration = int(( input.substring(input.indexOf(".")+1, 
-                                                                input.length()).toFloat())/pumpRate);}//set duration of pump on to achieve desired output volume with current pump rate
-    if(input.indexOf("cal") == 0)             {pumpRate = float(input.substring(input.indexOf(".")+1, 
+    if(input.indexOf("volume") == 0)          {pump_volume(input);}                                    //output volume of liquid using peristaltic pump
+    if(input.indexOf("calibrate") == 0)             {pumpRate = float(input.substring(input.indexOf(".")+1, 
                                                                 input.length()).toFloat())/1000;}     //calibrate pump rate with user input
     if(input.indexOf("goX") == 0)             {parseXY(input);}                                       //Parse string XY then go to position x, y
     if(input.indexOf("microstep") == 0)       {parseMicrostep(input);}                                //Update the microStep variable and all derivatives
@@ -451,6 +550,7 @@ void handle_input(String input)
     if(input.indexOf("mmper10000steps") == 0) {parseStepCal(input);}                                  //Take the number of mm traveled in 10000 steps and use it to calculate stepsPerMM
     if(input == "stepX")                      {calibrate_steps_X();}                                  //calibrate the distance moved in 1000 steps in the positive direction from the current position using the x stepper
     if(input == "DISPLAY")                    {update_status("Received message from display-server");}// this is a test message sent to confirm that the espnow connection is alive
+    if(input == "delay")                      {delay(1000);}                                          // delay for 1 second when prompted
 }
 
 //Main initialize function that starts serial connections sets pin modes etc...
@@ -462,6 +562,19 @@ void initialize_XYFLY()
   initialize_steppers_and_pump();
   //Initialize the BLE functions
   initialize_BLE();
+  // File system setup
+  initialize_FS();
+}
+
+bool initialize_FS()
+{
+  if(!LITTLEFS.begin())
+  {
+    update_status("LITTLEFS Mount Failed");
+    return false;
+  }
+  parseJSONtoExperiments();
+  return true;
 }
 
 //Setup for the x and y steppers and the pump
@@ -549,8 +662,8 @@ void initialize_BLE()
   pServer->advertiseOnDisconnect(true);
   NimBLEService*        pService                 = pServer->createService(SERVICE_UUID);
   NimBLECharacteristic* pCharacteristic          = pService->createCharacteristic(CMD_CHARACTERISTIC_UUID, 
-                                                                        NIMBLE_PROPERTY::READ |
-                                                                        NIMBLE_PROPERTY::WRITE);
+                                                                                  NIMBLE_PROPERTY::READ,
+                                                                                  NIMBLE_PROPERTY::WRITE);
   pCharacteristic->setCallbacks(&pCallbacks);
   pService->start();
   pCharacteristic->setValue("BLE_STARTED");
