@@ -7,42 +7,10 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <link rel="icon" type="image/png" href="">
     <style>
-        .dropdown 
-    {
-      float: left;
-      overflow: hidden;
-      position: absolute;
-    }
-    .dropdown .dropbtn 
-    {
-      font-size: 16px;
-      border: none;
-      outline: none;
-      color: white;
-      padding: 10px 10px;
-      background-color: inherit;
-      font: inherit;
-      margin: 0; 
-    }
-    .dropdown-content 
-    {
-      float: left;
-      padding: 20px;
-      height: 50px;
-      display: grid;
-      position: absolute;
-      background-color: #f9f9f9;
-      width: 100%;
-      left: 0;
-      box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-      z-index: 1;
-      font: inherit;
-      margin: 0;
-    }
     .row 
     {
       float: left;
-      width: 100%;
+      width: 50%;
       padding: 10px;
       background-color: #ccc;
       height: 150px;
@@ -67,7 +35,7 @@
       height: 50px;
       -webkit-appearance: none;
       appearance: none;
-      width: 33%;
+      width: 50px;
       opacity: 0.7;
       -webkit-transition: .2s;
       transition: opacity .2s;
@@ -92,219 +60,244 @@
     }
     .button
     {
-      float: left;
-      width: 30px;
-      padding: 20px;
-      background-color: #ccc;
-      height: 100px;
-      -webkit-appearance: none;
-      appearance: none;
-      width: 100%;
-      opacity: 0.7;
-      -webkit-transition: .2s;
-      transition: opacity .2s;
-      font: inherit;
-      margin: 0;
-      position: absolute;
+		margin: 5px;
+      	position: sticky;
+		width:50%;
+      	background-color: #ccc;
+	  	border: 2px solid green;
+		appearance: auto;
+      	opacity: 0.367;
+      	-webkit-appearance: auto;
+      	-webkit-transition: .2s;
+      	transition: opacity .2s;
+		font: bold 18px "Time New Roman", Time, serif;
     }
     .button:hover
     {
-      opacity: 1;
+		opacity: 1;
+		background-color: whitesmoke;
     }
     .highlighter 
     {
-      background: rgba(0, 255, 0, 0.25);
-      border: 1px dashed #fff;
-      z-index: 1;
-      position: absolute;
+		background: rgba(0, 255, 0, 0.25);
+		border: 1px dashed #fff;
+		z-index: 1;
+		position: absolute;
     }
     .container
     {
-      position: relative;
-      height: 100%;
-      width: 100%;
+		position: relative;
+		height: 100%;
+		width: 100%;
+		font: bold 18px "Time New Roman", Time, serif;
     }
     .rangecontainer
     {
-      float: left;
-      padding: 20px;
-      background-color: rgb(235, 235, 235);
-      height: 50px;
-      -webkit-appearance: none;
-      appearance: none;
-      width: 33%;
-      opacity: 0.7;
-      -webkit-transition: .2s;
-      transition: opacity .2s;
-      font: inherit;
-      margin: 0;
+		float: left;
+		padding: 20px;
+		background-color: rgb(235, 235, 235);
+		height: 50px;
+		-webkit-appearance: none;
+		appearance: none;
+		width: 33%;
+		opacity: 0.7;
+		-webkit-transition: .2s;
+		transition: opacity .2s;
+		font: inherit;
+		margin: 0;
     }
     .canvas 
     {
-      float: left;
-      padding: 0px;
-      background-color: rgb(235, 235, 235);
-      -webkit-appearance: none;
-      appearance: none;
-      opacity: 0.8;
-      -webkit-transition: .2s;
-      transition: opacity .2s;
-      font: inherit;
-      margin-top: 0px;
-      border: 0px solid black;
+		float: left;
+		padding: 0px;
+		background-color: rgb(235, 235, 235);
+		-webkit-appearance: none;
+		appearance: none;
+		opacity: 0.8;
+		-webkit-transition: .2s;
+		transition: opacity .2s;
+		font: inherit;
+		margin-top: 0px;
+		border: 0px solid black;
     }   
     .sliderX
     {
-      float: left;
-      padding: 0px;
-      background-color: rgb(235, 235, 235);
-      -webkit-appearance: none;
-      appearance: none;
-      opacity: 0.7;
-      -webkit-transition: .2s;
-      transition: opacity .2s;
-      font: inherit;
-      margin-left: -40px;
-      margin-top: 60px;
-      rotate: 90deg;
-      width: 100px;
+		float: left;
+		padding: 0px;
+		background-color: rgb(235, 235, 235);
+		-webkit-appearance: none;
+		appearance: none;
+		opacity: 0.7;
+		-webkit-transition: .2s;
+		transition: opacity .2s;
+		font: inherit;
+		margin-left: -40px;
+		margin-top: 60px;
+		rotate: 90deg;
+		width: 100px;
     }
     .sliderY
     {
-      float: right;
-      padding: 0px;
-      background-color: rgb(235, 235, 235);
-      -webkit-appearance: none;
-      appearance: none;
-      opacity: 0.7;
-      -webkit-transition: .2s;
-      transition: opacity .2s;
-      font: inherit;
-      margin-top: 0px;
-      margin-right: -15px;
-      rotate: 0deg;
-      width: 100px;
+		float: right;
+		padding: 0px;
+		background-color: rgb(235, 235, 235);
+		-webkit-appearance: none;
+		appearance: none;
+		opacity: 0.7;
+		-webkit-transition: .2s;
+		transition: opacity .2s;
+		font: inherit;
+		margin-top: 0px;
+		margin-right: -15px;
+		rotate: 0deg;
+		width: 100px;
     }
     .grid-container-xy 
     {
-      display: grid;
-      grid-template-columns: 20px 85px;
-      grid-template-rows: 200px;
+		display: grid;
+		grid-template-columns: 20px 85px;
+		grid-template-rows: 200px;
     }
     .grid-container 
     {
-      display: grid;
-      grid-template-columns: 50%, 50%;
-      grid-template-rows: auto auto;
+		display: grid;
+		grid-template-columns: 50%, 50%;
+		grid-template-rows: auto auto;
+		font: bold 18px "Time New Roman", Time, serif;
     }
+	.option
+	{
+		padding:0px;
+		margin:0px;
+	}
+	.option:hover
+    {
+      opacity: 1;
+	  background-color: rgb(255, 0, 0);
+    }
+	.tab 
+	{
+		overflow: hidden;
+		border: 1px solid #ccc;
+		background-color: #f1f1f1;
+		width: 50%;
+	}
+	.tab button 
+	{
+		background-color: inherit;
+		float: left;
+		border: none;
+		outline: none;
+		cursor: pointer;
+		padding: 14px 16px;
+		transition: 0.3s;
+	}
+	.tab button:hover 
+	{
+		background-color: #ddd;
+	}
+	.tab button.active 
+	{
+		background-color: #ccc;
+	}
+	.tabcontent 
+	{
+		position: sticky;
+		display: none;
+		padding: 6px 12px;
+	}
     </style>
 </head>
 <body>
-	<h1>XYFLYBLE</h1>
-	<h2>Auto Mating Flies</h2>
-	<button id="connectBleButton">Connect to BLE Device</button>
-	<button id="disconnectBleButton">Disconnect BLE Device</button>
-	<p>BLE state: <strong><span id="bleState" style="color:#d13a30;">Disconnected</span></strong></p>
-<!--	We will toggle the display of this wrapper when BLE is connected/disconnected-->
-	<div id="main_wrapper" style="display: none;"
-		<div class="grid-container">
-			<div class="container">
-			  <div class="statuscontainer">
-				<p>Status: <span class="textcontainer" id="main_status"></span></p>
-			  </div>
+	<div id="main_wrapper" class="grid-container" style="position: sticky; left: 10%;">
+		<h3>XYFLY - Automated research environment</h3>
+		<p>Bluetooth: <strong><span id="bleState" style="color:#d13a30;">Disconnected</span></strong></p>
+
+		<!-- Tab links -->
+		<div class="tab">
+			<button class="tablinks" onclick="openTab(event, 'bleContainer')">Bluetooth</button>
+			<button class="tablinks" onclick="openTab(event, 'experimentsContainer')">Experiments</button>
+			<button class="tablinks" onclick="openTab(event, 'steppersContainer')">Stepper controls</button>
+			<button class="tablinks" onclick="openTab(event, 'clearContainer')">Clear</button>
+		</div>
+
+		<!-- Tab content BLUETOOTH -->
+		<div id="bleContainer" class="tabcontent">
+			<button class="button" id="connectBleButton">Connect to BLE Device</button>
+			<button class="button" id="disconnectBleButton">Disconnect BLE Device</button>
+		</div>
+
+		<!-- Tab content CLEAR -->
+		<div id="clearContainer" class="tabcontent"></div>
+
+		<!-- Tab content STEPPERS -->
+		<div id="steppersContainer" class="tabcontent">
+			<div class="grid-container-xy">
+				<div>
+					<input type="range" min="0" max="100" value="0" step="10" class="sliderX" id="sliderX">
+				</div>
+				<div>
+					<input type="range" min="0" max="100" value="0" step="10" class="sliderY" id="sliderY">
+					<canvas id="canvas_element" width="100" height="100" class="canvas"></canvas>
+					<input type="button" value="Go to target" id="goto_target_button">
+					<p>Target: <span class="textcontainer" id="rect_pos_text"></span></p>
+				</div>
 			</div>
-			<div></div>
+			<input type="range" min="50" max="60000" value="6000" step="50" class="slider" id="sliderSpeed">
+			<input type="button" value="Set speed" id="speed_button">
+			<p>Speed (steps per second): <span class="textcontainer" id="target_speed_text">6000</span></p>
 		</div>
-		<div class="container">
-		  <input type="button" value="Go home" id="go_home_button">
-		  <input type="button" value="Set home" id="set_home_button">
-		  <input type="button" value="Find home" id="find_home_button">
+
+		<!-- Tab content EXPERIMENTS -->
+		<div id="experimentsContainer" class="tabcontent">
+			<input type="button" value="Start experiment" id="startExperiment_button">
+			<input type="button" value="Stop  experiment" id="stopExperiment_button">
+			<div class="grid-container"><span><strong>Command sequence interface</strong> (use ctrl, shift, or drag to select multiple options)</span>
+				<select id="sequenceCommands" size="10" multiple> 
+					<option class= "option" value="findHome">Find home</option>
+					<option class= "option" value="goHome">Go home</option>
+					<option class= "option" value="goX100Y0">Go to max X</option>
+					<option class= "option" value="goX0Y100">Go to max Y</option>
+					<option class= "option" value="goX100Y100">Go to max X, Y</option>
+					<option class= "option" value="dispense">Turn pump on</option>
+					<option class= "option" value="pump">Turn pump on for 1 second</option>
+					<option class= "option" value="delay">Wait for 1 second</option>
+					<option class= "option" value="stop">Stop</option>
+					<option class= "option" value="reset">Reset</option>
+				</select>
+				<div class="grid-container">
+					<p class="option">Command(s): <span  id="commandsDisplay">none</span></p>
+						<button class="button" id="saveCommands">Save command(s)</button>
+				</div>
+				<button id="sendCommandsButton" class="button">Transmit commands to ESP32 microcontroller</button>
+				<p>Last transmission received from BLE: <span id="timestamp" class="option">none</span></p>
+			</div>
+			<div>
+				<input type="checkbox" name ="joystickCheckbox" id="joystick_checkbox">
+				<label for="joystickCheckbox">Joystick mode</label>
+			</div>
 		</div>
-		<div></div>
-		<div class="grid-container-xy">
-		<div>
-		  <input type="range" min="0" max="100" value="0" step="10" class="sliderX" id="sliderX">
-		</div>
-		<div>
-		  <input type="range" min="0" max="100" value="0" step="10" class="sliderY" id="sliderY">
-		  <canvas id="canvas_element" width="100" height="100" class="canvas"></canvas>
-		  <input type="button" value="Go to target" id="goto_target_button">
-		  <p>Target (x, y): <span class="textcontainer" id="rect_pos_text"></span></p>
-		</div>
-		</div>
-		<div>
-		<div>
-		  <input type="checkbox" name="follow_checkbox" id="follow_checkbox">
-		  <label for="follow_checkbox">Follow mode</label>
-		</div>
-		</div>
-		<div class="container">
-		<input type="button" value="Run main" id="run_main_button">
-		<input type="button" value="Stop main" id="stop_main_button">
-		<input type="button" value="Dispense 1 second" id="dispense1s_button">
-		<input type="button" value="Dispense infinite" id="dispense_button">
-		</div>
-		<div class="container">
-		<div class="grid-container">
-		  <input type="button" value="Up       (X-)" id="jog_up_button">
-		  <input type="button" value="Down  (X+)" id="jog_down_button">
-		  <input type="button" value="Left     (Y-)" id="jog_left_button">
-		  <input type="button" value="Right    (Y+)" id="jog_right_button">
-		</div>
-		<input type="button" value="Stop X Motor" id="stopX_button">
-		<input type="button" value="Stop Y Motor" id="stopY_button">
-		<input type="button" value="Stop ALL Motors" id="stop_button">
-		</div>
-		<div class="grid-container">
-		<input type="button" value="Microsteps: 1" id="microstep1_button">    
-		<input type="button" value="Microsteps: 2" id="microstep2_button">    
-		<input type="button" value="Microsteps: 4" id="microstep4_button">
-		<input type="button" value="Microsteps: 8" id="microstep8_button">
-		<input type="button" value="Microsteps: 16" id="microstep16_button">
-		<input type="button" value="Microsteps: 32" id="microstep32_button">
-		<input type="range" min="500" max="100000" value="80000" step="500" class="slider" id="sliderSpeed">
-		<input type="button" value="Set speed" id="speed_button">
-		<p>Speed (steps per second): <span class="textcontainer" id="target_speed_text">4000</span></p>
-		</div>
-		<div></div>
-		<div>
-		<input type="checkbox" name ="joystickCheckbox" id="joystick_checkbox">
-		<label for="joystickCheckbox">Joystick mode</label>
-		</div>
-		<div>
-		<h2>Last command: <p><span id="valueContainer">NaN</span></h2>
-			  <input type="text" id="cmdInput", name ="cmdInput">
-			  <button id="sendCmdButton">Send command</button></p>
-		<p>Last reading datetime: <span id="timestamp"></span></p>
+		<div id="status_grid_container" class="grid-container">
+			<div class="statuscontainer">
+				<p>Status: <strong><span class="textcontainer" id="main_status"></span></strong></p>
+			</div>
 		</div>
 	</div>
 </body>
 <script>
 	var main_wrapper = document.getElementById("main_wrapper");
-  	var main_button = document.getElementById("run_main_button");
-	var stop_main_button = document.getElementById("stop_main_button");
-	var stop_button = document.getElementById("stop_button");
-	var go_home_button = document.getElementById("go_home_button");
-	var set_home_button = document.getElementById("set_home_button");
-	var find_home_button = document.getElementById("find_home_button");
+
+	var selectedCommands = document.getElementById("sequenceCommands");
+	var saveCommands_button = document.getElementById("saveCommands");
+	var commandsDisplay = document.getElementById("commandsDisplay");
+	var sendCommands_button = document.getElementById("sendCommandsButton");
+
+  	var startExperiment_button = document.getElementById("startExperiment_button");
+	var stopExperiment_button = document.getElementById("stopExperiment_button");
+
 	var main_status = document.getElementById("main_status");
-	var jog_left_button = document.getElementById("jog_left_button");
-	var jog_right_button = document.getElementById("jog_right_button");
-	var jog_up_button = document.getElementById("jog_up_button");
-	var jog_down_button = document.getElementById("jog_down_button");
-	var dispense_button = document.getElementById("dispense_button");
-	var dispense1s_button = document.getElementById("dispense1s_button");
-	var stopX_button = document.getElementById("stopX_button");
-	var stopY_button = document.getElementById("stopY_button");
-	var full_button = document.getElementById('full_vial_button');
-	var empty_button = document.getElementById('empty_vial_button');
+
 	var canvas_element = document.getElementById('canvas_element');
-	var microstep1_button = document.getElementById('microstep1_button');
-	var microstep2_button = document.getElementById('microstep2_button');
-	var microstep4_button = document.getElementById('microstep4_button');
-	var microstep8_button = document.getElementById('microstep8_button');
-	var microstep16_button = document.getElementById('microstep16_button');
-	var microstep32_button = document.getElementById('microstep32_button');
 	var sliderSpeed = document.getElementById('sliderSpeed');
 	var speed_button = document.getElementById('speed_button');
 	var target_speed_text = document.getElementById('target_speed_text');
@@ -317,20 +310,19 @@
 	var sliderX = document.getElementById('sliderX');
 	var sliderY = document.getElementById('sliderY');
 	var targetSize = 10;
+
 	var command = "";
-	var follow_checkbox = document.getElementById('follow_checkbox');
 	var joystick_checkbox = document.getElementById('joystick_checkbox');
-	var xcal_button = document.getElementById('xcal_button');
 	var mouseDown = 0;
 
-	const connectButton = document.getElementById('connectBleButton');
-	const disconnectButton = document.getElementById('disconnectBleButton');
-	const sendCmdButton = document.getElementById('sendCmdButton');
-	const cmdInput = document.getElementById('cmdInput');
-	const retrievedValue = document.getElementById('valueContainer');
-	const latestValueSent = document.getElementById('valueSent');
-	const bleStateContainer = document.getElementById('bleState');
-	const timestampContainer = document.getElementById('timestamp');
+	var connectButton = document.getElementById('connectBleButton');
+	var disconnectButton = document.getElementById('disconnectBleButton');
+	var sendCmdButton = document.getElementById('sendCmdButton');
+	var cmdInput = document.getElementById('cmdInput');
+	var retrievedValue = document.getElementById('valueContainer');
+	var latestValueSent = document.getElementById('valueSent');
+	var bleStateContainer = document.getElementById('bleState');
+	var timestampContainer = document.getElementById('timestamp');
 
 	var deviceName ='XYFLYBLE';
 	var bleService = 'd6d3eb5e-ddaf-492c-af4e-19323edf8fad';
@@ -339,6 +331,8 @@
 	var bleServer;
 	var bleServiceFound;
 	var pCharacteristicFound;
+	
+	var selectedValues;
 
 	document.body.onmousedown = function() 
 	{ 
@@ -346,7 +340,7 @@
 	}
 	document.body.ontouchstart = function()
 	{
-	  mouseDown = 1;
+		mouseDown = 1;
 	}
 	document.body.onmouseup = function() 
 	{
@@ -354,6 +348,28 @@
 	}
 	//Update the canvas when the mouse is hovered over to render the red rectangle over the mouse position
 	canvas_element.onmousemove = function(evt){updateCanvas(evt);}
+	//Handle tabs
+	function openTab(evt, tabName) 
+	{
+		// Declare all variables
+		var i, tabcontent, tablinks;
+
+		// Get all elements with class="tabcontent" and hide them
+		tabcontent = document.getElementsByClassName("tabcontent");
+		for (i = 0; i < tabcontent.length; i++) {
+			tabcontent[i].style.display = "none";
+		}
+
+		// Get all elements with class="tablinks" and remove the class "active"
+		tablinks = document.getElementsByClassName("tablinks");
+		for (i = 0; i < tablinks.length; i++) {
+			tablinks[i].className = tablinks[i].className.replace(" active", "");
+		}
+
+		// Show the current tab, and add an "active" class to the button that opened the tab
+		document.getElementById(tabName).style.display = "block";
+		evt.currentTarget.className += " active";
+	}
 	//Get the mouse position relative to the canvas
 	function getMousePos(evt) 
 	{
@@ -416,18 +432,6 @@
 	{
 	  target_speed_text.innerHTML = sliderSpeed.value;
 	}
-	follow_checkbox.onchange = function(evt)
-	{
-	  if(follow_checkbox.checked)
-	  {
-		main_status.innerHTML = "Following enabled";
-		writeOnCharacteristic("follow1");
-	  }else
-	  {
-		main_status.innerHTML = "Following disaled";
-		writeOnCharacteristic("follow0");
-	  }
-	}
 	joystick_checkbox.onchange = function(evt)
 	{
 	  if(joystick_checkbox.checked)
@@ -439,6 +443,24 @@
 		main_status.innerHTML = "Joystick disabled";
 		writeOnCharacteristic("joy0");
 	  }
+	}
+	//This button saves the command sequence that the user defines in the command sequence interface of the eperiments tab
+	saveCommands_button.onclick = function()
+	{
+		selectedValues = Array.from(selectedCommands.selectedOptions).map(option => option.value);
+		commandsDisplay.innerHTML = selectedValues[0];
+		for(i = 1; i<selectedValues.length; i++)
+		{
+			commandsDisplay.innerHTML += " |---> " + selectedValues[i];
+		}
+		
+	}
+	//transmit the saved command sequence to the esp32 for execution
+	sendCommands_button.onclick = function()
+	{
+		command = "sequence" + selectedValues;
+		main_status.innerHTML = "Sending command sequence: " + commandsDisplay.innerHTML;
+		writeOnCharacteristic(command);
 	}
 	//The buttons below send a specific command to the ESP32 using the xhr.open() and xhr.send() functions
 	speed_button.onclick = function()
@@ -453,106 +475,17 @@
 	  main_status.innerHTML = "Sending command: " + command;
 	  writeOnCharacteristic(command);
 	}
-	main_button.onclick = function()
+	startExperiment_button.onclick = function()
 	{
 	  main_status.innerHTML = "Fill all vials";
 	  writeOnCharacteristic("fillall");
 	}
-	stop_main_button.onclick = function()
+	stopExperiment_button.onclick = function()
 	{
 	  main_status.innerHTML = "Stop all filling operations";
 	  writeOnCharacteristic("stopfillall");
 	}
-	jog_left_button.onclick = function()
-	{
-	  main_status.innerHTML = "Jog up (-X)";
-	  writeOnCharacteristic("prevX");
-	}
-	jog_right_button.onclick = function()
-	{
-	  main_status.innerHTML = "Jog down (+X)";
-	  writeOnCharacteristic("nextX");
-	}
-	stopX_button.onclick = function()
-	{
-	  main_status.innerHTML = "Stopping X stepper";
-	  writeOnCharacteristic("stopX");
-	}
-	jog_up_button.onclick = function()
-	{
-	  main_status.innerHTML = "Jog right (+Y)";
-	   writeOnCharacteristic("nextY");
-	}
-	jog_down_button.onclick = function()
-	{
-	  main_status.innerHTML = "Jog left (-Y)";
-	   writeOnCharacteristic("prevY");
-	}
-	stopY_button.onclick = function()
-	{
-	  main_status.innerHTML = "Stopping Y stepper";
-	  writeOnCharacteristic("stopY");
-	}
-	stop_button.onclick = function()
-	{
-	  main_status.innerHTML = "Stopping the steppers";
-	   writeOnCharacteristic("stop");
-	}
-	go_home_button.onclick = function()
-	{
-	  main_status.innerHTML = "Homing the steppers";
-	   writeOnCharacteristic("gohome");
-	}
-	set_home_button.onclick = function()
-	{
-	  main_status.innerHTML = "Setting home for both steppers";
-	   writeOnCharacteristic("sethome");
-	}
-	find_home_button.onclick = function(evt)
-	{
-	  main_status.innerHTML = "Finding home for both steppers";
-	   writeOnCharacteristic("findhome");
-	}
-	dispense_button.onclick = function(evt)
-	{
-	  main_status.innerHTML = "Dispensing -no stop-";
-	   writeOnCharacteristic("dispense");
-	}
-	dispense1s_button.onclick = function(evt)
-	{
-	  main_status.innerHTML = "Dispensing -1 second-";
-	  writeOnCharacteristic("pump");
-	}
-	microstep1_button.onclick = function()
-	{
-	  main_status.innerHTML = "Microstep set to: 1";
-	  writeOnCharacteristic("microstep1");
-	}
-	microstep2_button.onclick = function()
-	{
-	  main_status.innerHTML = "Microstep set to: 2";
-	  writeOnCharacteristic("microstep2");
-	}
-	microstep4_button.onclick = function()
-	{
-	  main_status.innerHTML = "Microstep set to: 4";
-	  writeOnCharacteristic("microstep4");
-	}
-	microstep8_button.onclick = function()
-	{
-	  main_status.innerHTML = "Microstep set to: 8";
-	  writeOnCharacteristic("microstep8");
-	}
-	microstep16_button.onclick = function()
-	{
-	  main_status.innerHTML = "Microstep set to: 16";
-	  writeOnCharacteristic("microstep16");
-	}
-	microstep32_button.onclick = function()
-	{
-	  main_status.innerHTML = "Microstep set to: 32";
-	  writeOnCharacteristic("microstep32");
-	}
+	
 
 	// Connect Button (search for BLE Devices only if BLE is available)
 	connectButton.addEventListener('click', (event) => {
@@ -616,7 +549,6 @@
 			characteristic.addEventListener('characteristicvaluechanged', handleCharacteristicChange);
 			characteristic.startNotifications();
 			console.log("Notifications Started.");
-			main_wrapper.style.display = "inline-block";
 			console.log("Controls Revealed.");
 			return characteristic.readValue();
 		})
@@ -671,7 +603,6 @@
 		{
 			console.error ("Bluetooth is not connected. Cannot write to characteristic.")
 			window.alert("Bluetooth is not connected. Cannot write to characteristic. \n Connect to BLE first!")
-			main_wrapper.style.display = "none";
 			bleStateContainer.innerHTML = "Device Disconnected";
 			bleStateContainer.style.color = "#d13a30";
 		}
@@ -680,7 +611,6 @@
 	function disconnectDevice() 
 	{
 		console.log("Disconnect Device.");
-		main_wrapper.style.display = "none";
 		if (bleServer && bleServer.connected) 
 		{
 			if (pCharacteristicFound) 

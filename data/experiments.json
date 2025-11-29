@@ -1,0 +1,29 @@
+{
+    "experiments" :
+    [
+        {
+            "experimentID" : 0,
+            "title" : "Go 100,100; go 0,0; findHome",
+            "commands":
+            [
+                "goX100Y100",
+                "goX0Y0",
+                "findHome"
+            ],
+            "commandID" : 0,
+            "executionTime" : "01-01-1990"
+        },
+        {
+            "experimentID" : 1,
+            "title" : "findHome; go 0,0; go 100,100",
+            "commands":
+            [
+                "findHome",
+                "goX0Y0",
+                "goX100Y100"
+            ],
+            "commandID" : 0,
+            "executionTime" : "01-01-1990"
+        }
+    ]
+}
