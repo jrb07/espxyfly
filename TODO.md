@@ -1,7 +1,7 @@
 
-## Create an encrypted BLE connection between any bluetooth enabled device and this device
+## Encrypt the BLE connection 
 
-## Create a custom PCB and water proof/resistant enclosure for the electronics
+## Custom PCB and water proof/resistant electronics enclosure
 
 ## Create the infrastructure for experiments to be saved that are a series of commands to be executed asynchronously
 ###     (X, Y) "point" locations 

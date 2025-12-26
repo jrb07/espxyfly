@@ -3,9 +3,6 @@ Read the README and TODO markdown files for more information about this project.
 
 Open the main_app.html in a browser (on any device with a browser and bluetooth) to interact with the device!
 
- Git cmds help section:
-    git config credential.helper store
-    git push https://github.com/jrb07/espxyfly.git
 */
 
 // Define Serial print functions as debug functions
