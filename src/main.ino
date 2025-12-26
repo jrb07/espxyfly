@@ -32,6 +32,9 @@ bool search_for_limit_Y = true;
 char buffer[512];
 char character; 
 
+//Include algorithm to cound number of occurences of a character in a string easily
+#include <algorithm>
+
 /* 
 Stepper associated variables:
 Number of steps per full length = 198720 steps
@@ -90,38 +93,19 @@ These variables allow for Experiments to be stored and executed at specific XY l
   commands will be populated with a series of text commands
     the sets of comands and delays etc... between commands
 */
-struct Experiment
-{
-  int experimentID = 0;
-  int commandID   = 0;
-  unsigned long executionStart;
-  unsigned long executionEnd;
-  String description;
-  String commands[100];
-  String title;
-};
+#include <experiments.h>
 
-struct ExperimentManager
-{
-  Experiment experiments[10];//10 experiments max per manager as of now
-};
-
-ExperimentManager experimentManager;
-bool executingExperiments = false;
-int experimentID = 0;
-int commandID = 0;
-
-//JSON for experiment read and write to SPIFFS
-JsonDocument doc;
-
-//LittleFS to open the JSON document in our SPIFFS
-#include "FS.h"
-#include <LITTLEFS.h>
+/*
+LittleFS to open the JSON document in our SPIFFS
+  Is now builtin
+*/
+#include <LittleFS.h>
 
 // Parse JSON object
 void parseJSONtoExperiments()
 {
-  File file = fs.open("/experiments.json");
+  String path = "/experiments.json";
+  File file = LittleFS.open(path);
     if(!file || file.isDirectory()){
         Serial.println("- failed to open file for reading");
         return;
@@ -143,7 +127,7 @@ void parseJSONtoExperiments()
 
   // Extract values
   Serial.println(F("Response:"));
-  Serial.println(doc["experiments"].as<String[]>());
+  Serial.println(doc["experiments"].as<String>());
   file.close();
 }
 
@@ -206,6 +190,27 @@ void handleCommandSequence(String input)
 {
   update_status("Received command sequence of : ");
   update_status(input);
+  //the number of commands we have received is equal to the number of '.' occurences in the input string
+  int numCommands = 0;
+  for (int i = 0; i<input.length(); i++)
+  {
+    if(input[i] == '.')
+    {
+      numCommands++;
+    }
+  }
+  //create an array of strings to store the received commands in
+  String commands[100];
+  //remove the sequence part of the incoming commands sequence string
+  input = input.substring(0, input.indexOf("sequence"));
+  for(int i = 0; i< numCommands; i++)
+  {
+    commands[i] = input.substring(0, input.indexOf("."));
+    sprintf(buffer, "command %i parsed as: %s", i, commands[i]);
+    update_status(buffer);
+    handle_input(commands[i]);
+  }
+  update_status("Done receiving and executing sequence of commands");
 }
 
 //Function that is called when the BLE device is done advertising.
@@ -577,7 +582,7 @@ void initialize_XYFLY()
 
 bool initialize_FS()
 {
-  if(!LITTLEFS.begin())
+  if(!LittleFS.begin())
   {
     update_status("LITTLEFS Mount Failed");
     return false;

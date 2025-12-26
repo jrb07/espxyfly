@@ -451,14 +451,18 @@
 		commandsDisplay.innerHTML = selectedValues[0];
 		for(i = 1; i<selectedValues.length; i++)
 		{
-			commandsDisplay.innerHTML += " |---> " + selectedValues[i];
+			commandsDisplay.innerHTML += " ||======> " + selectedValues[i];
 		}
 		
 	}
 	//transmit the saved command sequence to the esp32 for execution
 	sendCommands_button.onclick = function()
 	{
-		command = "sequence" + selectedValues;
+		command = "sequence";
+		for(i = 1; i<selectedValues.length; i++)
+		{
+			command += "." + selectedValues[i];
+		}
 		main_status.innerHTML = "Sending command sequence: " + commandsDisplay.innerHTML;
 		writeOnCharacteristic(command);
 	}
