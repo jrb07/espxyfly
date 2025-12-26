@@ -32,6 +32,9 @@ bool search_for_limit_Y = true;
 char buffer[512];
 char character; 
 
+//Include algorithm to cound number of occurences of a character in a string easily
+#include <algorithm>
+
 /* 
 Stepper associated variables:
 Number of steps per full length = 198720 steps
@@ -187,6 +190,27 @@ void handleCommandSequence(String input)
 {
   update_status("Received command sequence of : ");
   update_status(input);
+  //the number of commands we have received is equal to the number of '.' occurences in the input string
+  int numCommands = 0;
+  for (int i = 0; i<input.length(); i++)
+  {
+    if(input[i] == '.')
+    {
+      numCommands++;
+    }
+  }
+  //create an array of strings to store the received commands in
+  String commands[100];
+  //remove the sequence part of the incoming commands sequence string
+  input = input.substring(0, input.indexOf("sequence"));
+  for(int i = 0; i< numCommands; i++)
+  {
+    commands[i] = input.substring(0, input.indexOf("."));
+    sprintf(buffer, "command %i parsed as: %s", i, commands[i]);
+    update_status(buffer);
+    handle_input(commands[i]);
+  }
+  update_status("Done receiving and executing sequence of commands");
 }
 
 //Function that is called when the BLE device is done advertising.
