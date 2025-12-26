@@ -90,38 +90,19 @@ These variables allow for Experiments to be stored and executed at specific XY l
   commands will be populated with a series of text commands
     the sets of comands and delays etc... between commands
 */
-struct Experiment
-{
-  int experimentID = 0;
-  int commandID   = 0;
-  unsigned long executionStart;
-  unsigned long executionEnd;
-  String description;
-  String commands[100];
-  String title;
-};
+#include <experiments.h>
 
-struct ExperimentManager
-{
-  Experiment experiments[10];//10 experiments max per manager as of now
-};
-
-ExperimentManager experimentManager;
-bool executingExperiments = false;
-int experimentID = 0;
-int commandID = 0;
-
-//JSON for experiment read and write to SPIFFS
-JsonDocument doc;
-
-//LittleFS to open the JSON document in our SPIFFS
-#include "FS.h"
-#include <LITTLEFS.h>
+/*
+LittleFS to open the JSON document in our SPIFFS
+  Is now builtin
+*/
+#include <LittleFS.h>
 
 // Parse JSON object
 void parseJSONtoExperiments()
 {
-  File file = fs.open("/experiments.json");
+  String path = "/experiments.json";
+  File file = LittleFS.open(path);
     if(!file || file.isDirectory()){
         Serial.println("- failed to open file for reading");
         return;
@@ -143,7 +124,7 @@ void parseJSONtoExperiments()
 
   // Extract values
   Serial.println(F("Response:"));
-  Serial.println(doc["experiments"].as<String[]>());
+  Serial.println(doc["experiments"].as<String>());
   file.close();
 }
 
@@ -577,7 +558,7 @@ void initialize_XYFLY()
 
 bool initialize_FS()
 {
-  if(!LITTLEFS.begin())
+  if(!LittleFS.begin())
   {
     update_status("LITTLEFS Mount Failed");
     return false;
