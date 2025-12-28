@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+	<script src="cytoscape.min.js"></script>
 <head>
     <title>XYFLYBLE</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -206,9 +207,16 @@
 		display: none;
 		padding: 6px 12px;
 	}
+	#cy 
+	{
+		width: 300px;
+		height: 300px;
+		display: block;
+	}
     </style>
 </head>
 <body>
+	
 	<div id="main_wrapper" class="grid-container" style="position: sticky; left: 10%;">
 		<h3>XYFLY by Automated Research Technologies</h3>
 		<p>Bluetooth: <strong><span id="bleState" style="color:#d13a30;">Disconnected</span></strong></p>
@@ -254,8 +262,9 @@
 			<input type="button" value="Stop  experiment" id="stopExperiment_button">
 			<div class="grid-container"><span><strong>Command sequence interface</strong> (use ctrl, shift, or drag to select multiple options)</span>
 				<select id="sequenceCommands" size="10" multiple> 
-					<option class= "option" value="findHome">Find home</option>
-					<option class= "option" value="goHome">Go home</option>
+					<option class= "option" value="findhome">Find home</option>
+					<option class= "option" value="gohome">Go home</option>
+					<option class= "option" value="sethome">Set home</option>
 					<option class= "option" value="goX100Y0">Go to max X</option>
 					<option class= "option" value="goX0Y100">Go to max Y</option>
 					<option class= "option" value="goX100Y100">Go to max X, Y</option>
@@ -286,6 +295,49 @@
 </body>
 <script>
 	var main_wrapper = document.getElementById("main_wrapper");
+	// var cy = cytoscape(
+	// {
+	// 	container: main_wrapper, // container to render in
+
+	// 	elements: [ // list of graph elements to start with
+	// 		{ // node a
+	// 		data: { id: 'command1' }
+	// 		},
+	// 		{ // node b
+	// 		data: { id: 'command2' }
+	// 		},
+	// 		{ // edge ab
+	// 		data: { id: 'command1-2', source: 'command1', target: 'command2' }
+	// 		}
+	// 	],
+
+	// 	style: [ // the stylesheet for the graph
+	// 		{
+	// 		selector: 'node',
+	// 		style: {
+	// 			'background-color': '#666',
+	// 			'label': 'data(id)'
+	// 		}
+	// 		},
+
+	// 		{
+	// 		selector: 'edge',
+	// 		style: {
+	// 			'width': 3,
+	// 			'line-color': '#ccc',
+	// 			'target-arrow-color': '#ccc',
+	// 			'target-arrow-shape': 'triangle',
+	// 			'curve-style': 'bezier'
+	// 		}
+	// 		}
+	// 	],
+
+	// 	layout: {
+	// 		name: 'grid',
+	// 		rows: 1
+	// 	}
+
+	// });
 
 	var selectedCommands = document.getElementById("sequenceCommands");
 	var saveCommands_button = document.getElementById("saveCommands");

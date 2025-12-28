@@ -19,11 +19,3 @@ struct ExperimentManager
 {
   Experiment experiments[10];//10 experiments max per manager as of now
 };
-
-ExperimentManager experimentManager;
-bool executingExperiments = false;
-int experimentID = 0;
-int commandID = 0;
-
-//JSON for experiment read and write to SPIFFS
-JsonDocument doc;
