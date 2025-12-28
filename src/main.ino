@@ -94,18 +94,24 @@ These variables allow for Experiments to be stored and executed at specific XY l
     the sets of comands and delays etc... between commands
 */
 #include <experiments.h>
+ExperimentManager experimentManager;
+bool executingExperiments = false;
+int experimentID = 0;
+int commandID = 0;
+
+//JSON for experiment read and write to SPIFFS
+JsonDocument doc;
 
 /*
-LittleFS to open the JSON document in our SPIFFS
-  Is now builtin
+SPIFFS to open the JSON document in our SPIFFS
 */
-#include <LittleFS.h>
+#include <SPIFFS.h>
 
 // Parse JSON object
 void parseJSONtoExperiments()
 {
   String path = "/experiments.json";
-  File file = LittleFS.open(path);
+  File file = SPIFFS.open(path);
     if(!file || file.isDirectory()){
         Serial.println("- failed to open file for reading");
         return;
@@ -115,7 +121,7 @@ void parseJSONtoExperiments()
     while(file.available()){
         Serial.write(file.read());
     }
-    
+  doc.clear();
   DeserializationError error = deserializeJson(doc, file);
   if (error) 
   {
@@ -230,9 +236,9 @@ void handle_main()
   //Handle async stepper movement
   handle_movement();
   //Handle async experiment execution
-  handle_experiments();
+  // handle_experiments();
   //Handle async pumping
-  handle_pumping();
+  // handle_pumping();
 }
 
 // Check for limit switch flags and search for limit switches if flag is true/1
@@ -307,7 +313,7 @@ void handle_experiments()
     Logic for processing the executeExperiments function which is essentially the main test/debug/example program
       In the future we can make the program a framework that the end user can iterate on
   */
-  if(executeExperiments)
+  if(executingExperiments)
   {
     update_status("Executing experiments.");
   }
@@ -582,9 +588,9 @@ void initialize_XYFLY()
 
 bool initialize_FS()
 {
-  if(!LittleFS.begin())
+  if(!SPIFFS.begin())
   {
-    update_status("LITTLEFS Mount Failed");
+    update_status("SPIFFS Mount Failed");
     return false;
   }
   parseJSONtoExperiments();
