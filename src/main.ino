@@ -1,15 +1,16 @@
- /* 
-Read the README and TODO markdown files for more information about this project.
+  /* 
+    Author: Jeremy Ryan Brown
+    All rights reserved.
 
-Open the main_app.html in a browser (on any device with a browser and bluetooth) to interact with the device!
+    Read the README and TODO markdown files for more information about this project.
+    Open the main_app.html in a browser (on any device with a browser and bluetooth) to interact with the device!
+  */
 
-*/
-
-// Define Serial print functions as debug functions
+  // Define Serial print functions as debug functions
 #define debug(x) Serial.print(x)
 #define debugln(x) Serial.println(x)
 
-//Define pins
+  //Define pins
 #define PUMP_RELAY_PIN 18
 #define LIMIT_SWITCH_PIN_X 5
 #define LIMIT_SWITCH_PIN_Y 25
@@ -20,7 +21,7 @@ Open the main_app.html in a browser (on any device with a browser and bluetooth)
 #define JOYSTICK_PIN_X 26 //USER INPUT PIN
 #define JOYSTICK_PIN_Y 27 //USER INPUT PIN
 
-//Limit switch interrupt related variables
+  //Limit switch interrupt related variables
 byte xLimitSwitchState = 0;
 byte yLimitSwitchState = 0;
 bool check_x_limit = false;
@@ -28,23 +29,23 @@ bool check_y_limit = false;
 bool search_for_limit_X = true;
 bool search_for_limit_Y = true;
 
-// Variables for parsing commands from the user
+  // Variables for parsing commands from the user
 char buffer[512];
 char character; 
 
-//Include algorithm to cound number of occurences of a character in a string easily
+  //Include algorithm to cound number of occurences of a character in a string easily
 #include <algorithm>
 
-/* 
-Stepper associated variables:
-Number of steps per full length = 198720 steps
-                   fullLengthMM = 250 mm
-                   stepsPerMM32 = 0.0013 mm/step or 1.3 micrometers/step
-To calculate the stepFactor take the microStep and divide by the max microStep (32) for example:
-    (32/microStep = stepFactor) this will allow us to adjust between alternate microStep settings in realtime
-    (32/2 = 16) (32/4 = 8) (32/8 = 4) (32/16 = 2) (32/32 = 1) dividing by 2 or 4 etc... reduces the number of steps since they will now be larger in distance
-    DERECIATED microStep was a user defined variable but now we will adjust stepper speed by user input only through FlexyStepper library functions
-*/
+  /* 
+    Stepper associated variables:
+    Number of steps per full length = 198720 steps
+                      fullLengthMM = 250 mm
+                      stepsPerMM32 = 0.0013 mm/step or 1.3 micrometers/step
+    To calculate the stepFactor take the microStep and divide by the max microStep (32) for example:
+        (32/microStep = stepFactor) this will allow us to adjust between alternate microStep settings in realtime
+        (32/2 = 16) (32/4 = 8) (32/8 = 4) (32/16 = 2) (32/32 = 1) dividing by 2 or 4 etc... reduces the number of steps since they will now be larger in distance
+        DERECIATED microStep was a user defined variable but now we will adjust stepper speed by user input only through FlexyStepper library functions
+  */
 #include <ESP_FlexyStepper.h>
 int numSubdivisions = 10;//the number of segments to divide the X and Y axes into
 
@@ -67,19 +68,19 @@ int xTarget = fullLengthSteps;
 int yTarget = fullLengthSteps;
 ESP_FlexyStepper stepperX, stepperY;
 
-// Pump
+  // Pump
 int duration            = 1000;//duration in milliseconds
 float pumpRate          = 1;//pumping rate in mL/s
 bool pumping            = false;//a boolean to keep track of if we have turned the pump on or off
 unsigned long pumpStart = millis();//the pump starting time to keep up with async pumping operations
 
-// Joystick
+  // Joystick
 bool joystickMode = false;
 int joyX          = 0;
 int joyY          = 0;
 int sennsitivity  = 10;
 
-//BLE
+  //BLE
 #include <NimBLEDevice.h>
 #define SERVICE_UUID "d6d3eb5e-ddaf-492c-af4e-19323edf8fad"
 #define CMD_CHARACTERISTIC_UUID "c57884e4-fae7-4370-81cf-6b4919b28042"
@@ -87,27 +88,27 @@ NimBLECharacteristic* pCharacteristic = nullptr;
 bool deviceConnected = false;
 uint32_t value = 0;
 
-/*
-These variables allow for Experiments to be stored and executed at specific XY locations stored as points
-  description will describe this experiment
-  commands will be populated with a series of text commands
-    the sets of comands and delays etc... between commands
-*/
+  /*
+  These variables allow for Experiments to be stored and executed at specific XY locations stored as points
+    description will describe this experiment
+    commands will be populated with a series of text commands
+      the sets of comands and delays etc... between commands
+  */
 #include <experiments.h>
 ExperimentManager experimentManager;
 bool executingExperiments = false;
 int experimentID = 0;
 int commandID = 0;
 
-//JSON for experiment read and write to SPIFFS
+  //JSON for experiment read and write to SPIFFS
 JsonDocument doc;
 
-/*
-SPIFFS to open the JSON document in our SPIFFS
-*/
+  /*
+    SPIFFS to open the JSON document in our SPIFFS
+  */
 #include <SPIFFS.h>
 
-// Parse JSON object
+  // Parse JSON object
 void parseJSONtoExperiments()
 {
   String path = "/experiments.json";
@@ -137,7 +138,7 @@ void parseJSONtoExperiments()
   file.close();
 }
 
-//Function that takes in a String and then outputs that String to all displays in this project
+  //Function that takes in a String and then outputs that String to all displays in this project
 void update_status(String updated_status)
 {
   debugln();
@@ -146,19 +147,20 @@ void update_status(String updated_status)
   debugln();
 }
 
-// Initialize all the periphreals and BT
+  // Initialize all the periphreals and BT
 void setup(){initialize_XYFLY();}
 
+  // Our loop just redirects to the idle function
 void loop(){idle();}
 
-// Constant idle with delay that keeps parallel processing alive
+  // Constant idle with delay that keeps parallel processing alive
 void idle()
 {
   delayMicroseconds(1);
   handle_main();
 }
 
-// Update the accelerations, deecelerations, speeds, stepFactor, stepsPerMM, segmentLen, and set stepsPerMM for both steppers
+  // Update the accelerations, deecelerations, speeds, stepFactor, stepsPerMM, segmentLen, and set stepsPerMM for both steppers
 void updateStepperVars()
 {
   stepFactor = 32/microStep;
@@ -177,7 +179,7 @@ void updateStepperVars()
   stepperY.setDecelerationInStepsPerSecondPerSecond(DECELERATION_IN_STEPS_PER_SECOND);
 }
 
-//Tell the steppers to move to each position and remove each position that has been filled from the list
+  //Tell the steppers to move to each position and remove each position that has been filled from the list
 void executeExperiments()
 {
   update_status("Executing all stored experiments...");
@@ -192,6 +194,7 @@ void executeExperiments()
   if(experimentID < 10 && currentCommand != experimentManager.experiments[10].commands[100]){executingExperiments = true;}else{executingExperiments = false;}
 }
 
+  // Parse command sequences into individual commands that are executed in sequence but in the future will be asynchronous
 void handleCommandSequence(String input)
 {
   update_status("Received command sequence of : ");
@@ -219,7 +222,7 @@ void handleCommandSequence(String input)
   update_status("Done receiving and executing sequence of commands");
 }
 
-//Function that is called when the BLE device is done advertising.
+  //Function that is called when the BLE device is done advertising.
 void onAdvComplete(NimBLEAdvertising* pAdvertising) 
 {
     update_status("onAdvComplete() called.");
@@ -230,7 +233,7 @@ void onAdvComplete(NimBLEAdvertising* pAdvertising)
     }
 }
 
-// Move the motors and search for the limit switches...
+  // Move the motors and search for the limit switches...
 void handle_main()
 {  
   //Handle async stepper movement
@@ -241,7 +244,7 @@ void handle_main()
   // handle_pumping();
 }
 
-// Check for limit switch flags and search for limit switches if flag is true/1
+  // Check for limit switch flags and search for limit switches if flag is true/1
 void handle_homing()
 {
 //check the X limit switch flag conditions
@@ -286,7 +289,7 @@ void handle_homing()
 
 }
 
-//Process movement for the X and Y stepper if either are not at their target position.
+  //Process movement for the X and Y stepper if either are not at their target position.
 void handle_movement()
 {
   //Handle homing operations before moving any steppers
@@ -307,18 +310,21 @@ void handle_movement()
   }
 }
 
-void handle_experiments()
-{
   /*
     Logic for processing the executeExperiments function which is essentially the main test/debug/example program
       In the future we can make the program a framework that the end user can iterate on
   */
+void handle_experiments()
+{
   if(executingExperiments)
   {
     update_status("Executing experiments.");
   }
 }
 
+  /*
+    Determine if we have been pumping long enough to turn the pump off
+  */
 void handle_pumping()
 {
   unsigned long timeElapsed = millis()-pumpStart;
@@ -341,20 +347,20 @@ void handle_pumping()
   }
 }
 
-//Interrupt for the X limit switch; has to be short to avoid watchdog timer timeouts so will use a flag
+  //Interrupt for the X limit switch; has to be short to avoid watchdog timer timeouts so will use a flag
 void x_limit_switch_interrupt_rising()
 {
   xLimitSwitchState = 1;
 }
 
-//Interrupt for the Y limit switch; has to be short to avoid watchdog timer timeouts so will use a flag
+  //Interrupt for the Y limit switch; has to be short to avoid watchdog timer timeouts so will use a flag
 void y_limit_switch_interrupt_rising()
 {
   yLimitSwitchState = 1;
 }
 
-//Tell both steppers to go to the Home position or x = 0 and y = 0
-//THIS FUNCTION IS NOW DEPRECIATED AND WILL TRIGGER THE FIND HOME FUNCTION EVERY TIME
+  //Tell both steppers to go to the Home position or x = 0 and y = 0
+  //THIS FUNCTION IS NOW DEPRECIATED AND WILL REDIRECT TO THE FIND HOME FUNCTION EVERY TIME
 void go_home()
 {
   update_status("Going home by triggering find_home();");
@@ -363,7 +369,7 @@ void go_home()
   // delay(100);
 }
 
-//Set the current position as the Home position (x = 0, y = 0)
+  //Set the current position as the Home position (x = 0, y = 0)
 void set_home()
 {       
   update_status("Setting home...");
@@ -375,7 +381,7 @@ void set_home()
   yTarget = 0;
 }
 
-//Find the limit switches and set that position as home then bounce
+  //Find the limit switches and set that position as home then bounce
 void find_home()
 {
   update_status("Starting search for X limit switch to acquire new X stepper home.");
@@ -393,7 +399,7 @@ void find_home()
   delay(100);
 }
 
-//handle the joystick toggling using user input in form of String with a 0 for off or a 1 for on
+  //handle the joystick toggling using user input in form of String with a 0 for off or a 1 for on
 void handleJoy(String input)
 {
    if(input == "joy1")      { joystickMode =  true;   update_status("Joystick engaged");         }
@@ -401,13 +407,13 @@ void handleJoy(String input)
    else                     {                         update_status("Joystick input CORRUPTED"); }
 }
 
-//Take 10000 steps to determine the distance per 10000 steps
+  //Take 10000 steps to determine the distance per 10000 steps
 void calibrate_steps_X()
 {
   stepperX.setTargetPositionInSteps(stepperX.getCurrentPositionInSteps()+10000);
 }
 
-// Receive user feedback to determine the number of mm traveled by 1000 steps
+  //Receive user feedback to determine the number of mm traveled by 1000 steps
 void parseStepCal(String input)
 {
   float mmper10000steps = float(input.substring(input.indexOf("mmper1000steps")+14, input.length()).toFloat());
@@ -415,7 +421,7 @@ void parseStepCal(String input)
   updateStepperVars();
 }
 
-//Use a specified amount of ON time (10s) to calibrate the amount of fluid dispensed in that time period
+  //Use a specified amount of ON time (10s) to calibrate the amount of fluid dispensed in that time period
 void calibrate_pump()
 {
   
@@ -429,8 +435,8 @@ void calibrate_pumpRate(String input)
   pumpRate = float(input.substring(input.indexOf(".")+1, input.length()).toFloat())/1000;
 }
 
-//Turn the pump on for a specified amount of time in milliseconds or default to the default amount of time
-// DEPRECIATED USE ASYNC TOGGLING WITH TIMESTAMPS INSTEAD
+  //Turn the pump on for a specified amount of time in milliseconds or default to the default amount of time
+  // DEPRECIATED in the future please USE ASYNC TOGGLING WITH TIMESTAMPS INSTEAD
 void pump(float _duration = 0)
 {
   //if no custom duration is sent then set custom duration to default duration
@@ -442,19 +448,20 @@ void pump(float _duration = 0)
   digitalWrite(PUMP_RELAY_PIN, HIGH);
 }
 
-//Turn the pump on if it off and off if it is on
+  //Turn the pump on if it off and off if it is on
 void toggle_pump()
 {
   update_status("Call to toggle_pump() is DEPRICIATED");
 }
 
+  // Pump a volume in mL by using the pumping rate determined via end user calibration
 void pump_volume(String input)
 {
   duration = int(( input.substring(input.indexOf(".")+1, input.length()).toFloat())/pumpRate);
   pumpStart = millis();
 }
 
-//Take a string input and parse it into a target x and y position
+  //Take a string input and parse it into a target x and y position
 void parseXY(String input)
 {
   float goX = input.substring(input.indexOf("goX")+3, input.indexOf("goY")).toFloat();
@@ -466,7 +473,7 @@ void parseXY(String input)
   move_to_X_Y(goX, goY);
 }
 
-//Move steppers to a specific point within the limits of the x and y axes
+  //Move steppers to a specific point within the limits of the x and y axes
 void move_to_X_Y(float _x, float _y)
 {
   xTarget = round(_x);
@@ -477,46 +484,49 @@ void move_to_X_Y(float _x, float _y)
   stepperY.setTargetPositionInSteps(-yTarget);
 }
 
-//Move to the previous x position
+  //Move to the previous x position
 void move_to_prev_X()
 {
   float X_ = constrain(xTarget-segmentLen, 0, fullLengthSteps);
   move_to_X_Y(X_, yTarget);
 }
 
-//Move to the next x position
+  //Move to the next x position
 void move_to_next_X()
 {
   float X_ = constrain(xTarget+segmentLen, 0, fullLengthSteps);
   move_to_X_Y(X_, yTarget);
 }
 
-//Move to the previous y position
+  //Move to the previous y position
 void move_to_prev_Y()
 {
   float Y_ = constrain(yTarget-segmentLen, -fullLengthSteps, 0);
   move_to_X_Y(xTarget, Y_);
 }
 
-//Move to the next y position
+  //Move to the next y position
 void move_to_next_Y()
 {
   float Y_ = constrain(yTarget+segmentLen, -fullLengthSteps, 0);
   move_to_X_Y(xTarget, Y_);
 }
 
+  // Convert the string input into an integer that we use to update the stepper motor microsteps
 void parseMicrostep(String input)
 {
   microStep = input.substring(input.indexOf("microstep")+9, input.length()).toInt();
   updateStepperVars();
 }
 
+  // Convert the string input into an integer that we use to update the stepper motor speeds
 void updateSpeed(String input)
 {
   SPEED_IN_STEPS_PER_SECOND = input.substring(input.indexOf("speed")+5, input.length()).toInt();
   updateStepperVars();
 }
 
+  // Will stop the steppers and cancel experiment execution
 void emergencyStop()
 {
   stepperX.emergencyStop();
@@ -524,6 +534,7 @@ void emergencyStop()
   executingExperiments = false;
 }
 
+  // Will gracefully reset the esp32
 void resetDevice()
 {
   update_status("HARD RESET");
@@ -531,11 +542,14 @@ void resetDevice()
   ESP.restart();
 }
 
-/*
-Description:  Passive structure for commands/keywords sent from the user, or by instruction sets, to be converted to specific function calls.
-String input: A named String variable that represents commands from the user or instruction sets.
-Flow:         Parses the String input using if logic flow to identify commands and execute functions in response to specific keywords.
-*/
+  /*
+    Description:  Passive structure for commands/keywords sent from the user, or by instruction sets, to be converted to specific function calls.
+    String input: A named String variable that represents commands from the user or instruction sets.
+    Flow:         Parses the String input using if logic flow to identify commands and execute functions in response to specific keywords.
+
+    TODO: Turn this whole function into a HashMap and hash the input for the resulting function call
+      This may be an issue if part of the function call is a user defined variable
+  */
 void handle_input(String input)
 {
     sprintf(buffer, "Input command received as: %s", input.c_str());
@@ -561,19 +575,19 @@ void handle_input(String input)
     if(input == "up")                         {stepperY.startJogging(-1);}                            //move y stepper in positive direction
     if(input == "down")                       {stepperY.startJogging(1);}                             //move y stepper in negative direction
     if(input == "pump1s")                     {calibrate_pump();}                                     //activate the pump for one second
-    if(input.indexOf("volume") == 0)          {pump_volume(input);}                                   //output volume of liquid using peristaltic pump
+    if(input.indexOf("volume")    == 0)       {pump_volume(input);}                                   //output volume of liquid using peristaltic pump
     if(input.indexOf("calibrate") == 0)       {calibrate_pumpRate(input);}                            //calibrate pump rate in milliliters per second with user input
-    if(input.indexOf("goX") == 0)             {parseXY(input);}                                       //Parse string XY then go to position x, y
+    if(input.indexOf("goX")       == 0)       {parseXY(input);}                                       //Parse string XY then go to position x, y
     if(input.indexOf("microstep") == 0)       {parseMicrostep(input);}                                //Update the microStep variable and all derivatives
-    if(input.indexOf("speed") == 0)           {updateSpeed(input);}                                   //set the speed in steps per second
-    if(input.indexOf("joy") == 0)             {handleJoy(input);}                                     //toggle the joystick mode
+    if(input.indexOf("speed")     == 0)       {updateSpeed(input);}                                   //set the speed in steps per second
+    if(input.indexOf("joy")       == 0)       {handleJoy(input);}                                     //toggle the joystick mode
     if(input.indexOf("mmper10000steps") == 0) {parseStepCal(input);}                                  //Take the number of mm traveled in 10000 steps and use it to calculate stepsPerMM
     if(input == "stepX")                      {calibrate_steps_X();}                                  //calibrate the distance moved in 1000 steps in the positive direction from the current position using the x stepper
     if(input == "DISPLAY")                    {update_status("Received message from display-server");}// this is a test message sent to confirm that the espnow connection is alive
     if(input == "delay")                      {delay(1000);}                                          // delay for 1 second when prompted
 }
 
-//Main initialize function that starts serial connections sets pin modes etc...
+  //Main initialize function that initiates the initialization of the main peripherals and I/O systems
 void initialize_XYFLY()
 {
   // Start and init serial connection
@@ -586,6 +600,7 @@ void initialize_XYFLY()
   initialize_FS();
 }
 
+  // Mount the file system or error out trying
 bool initialize_FS()
 {
   if(!SPIFFS.begin())
@@ -597,7 +612,7 @@ bool initialize_FS()
   return true;
 }
 
-//Setup for the x and y steppers and the pump
+  //Setup for the x and y steppers and the pump - pump is included because it is only 1 line of code
 void initialize_steppers_and_pump()
 {
   stepperX.connectToPins(STEP_PIN_X, DIR_PIN_X);
@@ -627,6 +642,7 @@ void initialize_steppers_and_pump()
   pinMode(PUMP_RELAY_PIN, OUTPUT);
 }
 
+  // Callbacks for our BLE service
 class serverCallbacks : public NimBLEServerCallbacks
 {
     void onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo) override 
@@ -665,6 +681,7 @@ class pCallbacks : public NimBLECharacteristicCallbacks
   };
 } pCallbacks;
 
+  // Initialization of our BLE service where our callbacks are defined before/above this function
 void initialize_BLE()
 {
   update_status("BLE starting...");
