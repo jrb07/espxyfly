@@ -9,8 +9,10 @@
 
 #### TODO is in a seperate markdown file called TODO.md
 
- #### Git cmds help section:
-####    git config credential.helper store
-####    git push https://github.com/jrb07/espxyfly.git
+##### Git cmds help section: 
+```
+git config credential.helper store 
+git push https://github.com/jrb07/espxyfly.git
+```
 
 [Markdown cheat sheet](https://www.markdownguide.org/cheat-sheet/)
