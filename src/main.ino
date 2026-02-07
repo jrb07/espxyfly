@@ -28,12 +28,14 @@ bool check_x_limit = false;
 bool check_y_limit = false;
 bool search_for_limit_X = true;
 bool search_for_limit_Y = true;
+int num_searches_for_limit_X = 0;
+int num_searches_for_limit_Y = 0;
 
   // Variables for parsing commands from the user
 char buffer[512];
 char character; 
 
-  //Include algorithm to cound number of occurences of a character in a string easily
+  //Include algorithm to cound number of occurences of a character in a string quickly
 #include <algorithm>
 
   /* 
@@ -201,6 +203,7 @@ void handleCommandSequence(String input)
   update_status(input);
   //the number of commands we have received is equal to the number of '.' occurences in the input string
   int numCommands = 0;
+  if(!input.contains('.')){return;}
   for (int i = 0; i<input.length(); i++)
   {
     if(input[i] == '.')
@@ -217,7 +220,9 @@ void handleCommandSequence(String input)
     commands[i] = input.substring(0, input.indexOf("."));
     sprintf(buffer, "command %i parsed as: %s", i, commands[i]);
     update_status(buffer);
-    handle_input(commands[i]);
+    // TODO:
+    //    HANDLE COMMANDS ASYNCHRONOUSLY
+    // handle_input(commands[i]);
   }
   update_status("Done receiving and executing sequence of commands");
 }
@@ -261,6 +266,7 @@ void handle_homing()
     //Reset the limit switch state
     xLimitSwitchState = 0;
   }
+  num_searches_for_limit_X++;
 
   //Check the Y limit switch flag conditions
   if(yLimitSwitchState == 1)
@@ -276,16 +282,22 @@ void handle_homing()
     //Reset the limit switch state
     yLimitSwitchState = 0;
   }
+  num_searches_for_limit_Y++;
 
-  //if we have gotten to the perceived home position but are still searching for home then call the find_home function again
+  //if we have gotten to the perceived home position but are still searching for home and we havent been looking for home twice already then call the find_home function again
   if(stepperX.getCurrentPositionInSteps() == 0 && search_for_limit_X)
   {
     find_home();
   }
-  if(stepperY.getCurrentPositionInSteps() == 0 &&  search_for_limit_Y)
+  //if we have exceeded the number of allowable searches for this axis then stop searching for the limit
+  if(num_searches_for_limit_X > 2){num_searches_for_limit_X = 0;search_for_limit_X=false;}
+  
+  if(stepperY.getCurrentPositionInSteps() == 0 && search_for_limit_Y)
   {
     find_home();
   }
+  //if we have exceeded the number of allowable searches for this axis then stop searching for the limit
+  if(num_searches_for_limit_Y > 2){num_searches_for_limit_Y=0;search_for_limit_Y=false;}
 
 }
 
@@ -699,8 +711,7 @@ void initialize_BLE()
   pServer->advertiseOnDisconnect(true);
   NimBLEService*        pService                 = pServer->createService(SERVICE_UUID);
   NimBLECharacteristic* pCharacteristic          = pService->createCharacteristic(CMD_CHARACTERISTIC_UUID, 
-                                                                                  NIMBLE_PROPERTY::READ,
-                                                                                  NIMBLE_PROPERTY::WRITE);
+                              NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::NOTIFY);
   pCharacteristic->setCallbacks(&pCallbacks);
   pService->start();
   pCharacteristic->setValue("BLE_STARTED");
