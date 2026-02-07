@@ -695,7 +695,7 @@
 			});
 		} else 
 		{
-			console.error ("Bluetooth is not connected. Cannot write to characteristic.")
+			console.error ("Bluetooth is not connected. Cannot write to characteristic. Sending the user a window.alert...")
 			window.alert("Bluetooth is not connected. Cannot write to characteristic. \n Connect to BLE first!")
 			bleStateContainer.innerHTML = "Device Disconnected";
 			bleStateContainer.style.color = "#d13a30";
