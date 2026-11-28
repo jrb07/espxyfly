@@ -231,7 +231,7 @@
 		<div class="tab">
 			<button class="tablinks" onclick="openTab(event, 'bleContainer')">Bluetooth</button>
 			<button class="tablinks" onclick="openTab(event, 'experimentsContainer')">Experiments</button>
-			<button class="tablinks" onclick="openTab(event, 'steppersContainer')">Stepper controls</button>
+			<button class="tablinks" onclick="openTab(event, 'directContainer')">Direct controls</button>
 			<button class="tablinks" onclick="openTab(event, 'clearContainer')">Clear</button>
 		</div>
 
@@ -244,8 +244,8 @@
 		<!-- Tab content CLEAR -->
 		<div id="clearContainer" class="tabcontent"></div>
 
-		<!-- Tab content STEPPERS -->
-		<div id="steppersContainer" class="tabcontent">
+		<!-- Tab content DIRECT -->
+		<div id="directContainer" class="tabcontent">
 			<div class="grid-container-xy">
 				<div>
 					<input type="range" min="0" max="100" value="0" step="10" class="sliderX" id="sliderX">
@@ -260,7 +260,19 @@
 			<input type="range" min="50" max="60000" value="6000" step="50" class="slider" id="sliderSpeed">
 			<input type="button" value="Set speed" id="speed_button">
 			<p>Speed (steps per second): <span class="textcontainer" id="target_speed_text">6000</span></p>
-			<input type="button" value="Send command button" id="sendCmdButton">
+			<input type="button" value="     Find home     " id="findHomeButton">
+			<div></div>
+			<input type="text" value="" id="cmdInput">
+			<input type="button" value="Send custom command" id="sendCmdButton">
+			<div></div>
+			<p> --- Available custom commands --- </p>
+			<p> findhome | gohome | sethome </p>
+			<p> dispense | pump | pump1s </p>
+			<p> seqeunce | startexperiments | endexperiments </p>
+			<p> nextX | nextY | prevX | prevY | right | left | up | down </p>
+			<p> goX(0-100)goY(0-100)</p>
+			<p> volume(integer) | calibrate(integer) | microstep(integer) | speed(1-60000) | mmper10000steps(integer) </p>
+			<p> stepX | DISPLAY | delay | reset | stop </p>
 		</div>
 
 		<!-- Tab content EXPERIMENTS -->
@@ -321,6 +333,7 @@
 	var goXInput = document.getElementById("goXInput");
 	var goYInput = document.getElementById("goYInput");
 	var commandsDisplay = document.getElementById("commandsDisplay");
+	var findHome_button = document.getElementById("findHomeButton");
 	var sendCommands_button = document.getElementById("sendCommandsButton");
 	
 	//Let the user start and stop execution of experiments
@@ -393,11 +406,6 @@
 	
 	// Variable to collect the saved commands in
 	var savedCommands = [];
-
-	// Thinking of adding a terminal for debugging by submitting commands straight to the parse
-	// var term = new Terminal();
-    // term.open(document.getElementById('terminal'));
-    // term.write('Hello from \x1B[1;3;31mxterm.js\x1B[0m $ ')
 
 	//Set the behaviors for when the mouse is clicked and released
 	document.body.onmousedown = function() 
@@ -590,7 +598,14 @@
 	// Disconnect Button
 	disconnectButton.addEventListener('click', disconnectDevice);
 
-	//Send command button takes the text from the input field and udpates the pCharacterstic with that value
+	//Find home  button updates the pCharacterstic with the value to tell the steppers to forget home and find new home in x and y axes
+	findHome_button.onclick = function()
+	{
+		command = "findhome";
+		writeOnCharacteristic(command);
+	}
+
+	//Send command button takes the text from the input field and updates the pCharacterstic with that value
 	sendCmdButton.onclick = function()
 	{
 		retrievedValue.innerHTML = cmdInput.value;

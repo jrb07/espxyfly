@@ -2,8 +2,13 @@
     Author: Jeremy Ryan Brown
     All rights reserved.
 
+    This is the ESPXYFLY main device script. This script executes on the main ESP32 that is controlling the modules.
+    The modules are peripherals and soft components attached to the cartesian robot platform that is known as XYFLY.
+    More modules are planned to be added overtime as part of the Automating Research Technology (ART) initiative.
+
     Read the README and TODO markdown files for more information about this project.
-    Open the main_app.html in a browser (on any device with a browser and bluetooth) to interact with the device!
+    Open the main_app.html, found in subdirectory control_scripts, in a browser to interact with the modules.
+    The browser must have bluetooth support to communicate with the modules.
   */
 
   // Define Serial print functions as debug functions
@@ -62,7 +67,7 @@ int stepsPerMM32 = fullLengthSteps32/fullLengthMM;
 int stepsPerMM = stepsPerMM32/stepFactor;//scale the stepsPerMM using the current microStep
 int segmentLen = fullLengthSteps/numSubdivisions;//this is the number of steps per segment length defined by the number of subdivisions
 
-int SPEED_IN_STEPS_PER_SECOND = 6000;
+int SPEED_IN_STEPS_PER_SECOND = 16763; // this default is 3 factors of octave 8 of an F note
 int ACCELERATION_IN_STEPS_PER_SECOND = SPEED_IN_STEPS_PER_SECOND;
 int DECELERATION_IN_STEPS_PER_SECOND = SPEED_IN_STEPS_PER_SECOND;
 
