@@ -11,7 +11,65 @@
     The browser must have bluetooth support to communicate with the modules.
   */
 
-  // Define Serial print functions as debug functions
+  /*
+  The section below defines all custom functions prior to setup which is necessary to transition from .ino to .cpp.
+  Starts with all the includes as it must.
+  */
+#include <Arduino.h>
+//Include algorithm to count number of occurences of a character in a string quickly
+#include <algorithm>
+#include <ESP_FlexyStepper.h>
+#include <NimBLEDevice.h>
+//Helper library to manage experiment complexity outside this long main script
+#include <experiments.h>
+//SPIFFS to open the JSON document in our SPIFFS
+#include <SPIFFS.h>
+void parseJSONtoExperiments();
+void idle();
+void updateStepperVars();
+void update_status(String updated_status);
+void executeExperiments();
+void handleCommandSequence(String input);
+void onAdvComplete(NimBLEAdvertising* pAdvertising);
+void handle_main();
+void handle_homing();
+void handle_movement();
+void handle_experiments();
+void handle_pumping();
+void x_limit_switch_interrupt_rising();
+void y_limit_switch_interrupt_rising();
+void go_home();
+void set_home();
+void find_home();
+void handleJoy(String input);
+void calibrate_steps_X();
+void parseStepCal(String input);
+void calibrate_pump();
+void calibrate_pump_rate(String input);
+void pump(float _duration);
+void toggle_pump();
+void pump_volume(String input);
+void parseXY(String input);
+void move_to_X_Y(float _x, float _y);
+void move_to_prev_X();
+void move_to_next_X();
+void move_to_prev_Y();
+void move_to_next_Y();
+void parseMicrostep(String input);
+void updateSpeed(String input);
+void emergencyStop();
+void resetDevice();
+void handle_input(String input);
+void initialize_XYFLY();
+bool initialize_FS();
+void initialize_steppers_and_pump();
+// class serverCallbacks : public NimBLEServerCallbacks{} serverCallbacks;
+// class pCallbacks : public NimBLECharacteristicCallbacks{} pCallbacks;
+void initialize_BLE();
+
+  //End functions declarations
+
+  // Define Serial print functions as debug functions; essentially renaming and adding addition functionality later.
 #define debug(x) Serial.print(x)
 #define debugln(x) Serial.println(x)
 
@@ -26,7 +84,7 @@
 #define JOYSTICK_PIN_X 26 //USER INPUT PIN
 #define JOYSTICK_PIN_Y 27 //USER INPUT PIN
 
-  //Limit switch interrupt related variables
+//Limit switch interrupt related variables
 byte xLimitSwitchState = 0;
 byte yLimitSwitchState = 0;
 bool check_x_limit = false;
@@ -36,24 +94,23 @@ bool search_for_limit_Y = true;
 int num_searches_for_limit_X = 0;
 int num_searches_for_limit_Y = 0;
 
-  // Variables for parsing commands from the user
+// Variables for parsing commands from the user
 char buffer[512];
 char character; 
 
-  //Include algorithm to cound number of occurences of a character in a string quickly
-#include <algorithm>
 
-  /* 
-    Stepper associated variables:
-    Number of steps per full length = 198720 steps
-                      fullLengthMM = 250 mm
-                      stepsPerMM32 = 0.0013 mm/step or 1.3 micrometers/step
-    To calculate the stepFactor take the microStep and divide by the max microStep (32) for example:
-        (32/microStep = stepFactor) this will allow us to adjust between alternate microStep settings in realtime
-        (32/2 = 16) (32/4 = 8) (32/8 = 4) (32/16 = 2) (32/32 = 1) dividing by 2 or 4 etc... reduces the number of steps since they will now be larger in distance
-        DERECIATED microStep was a user defined variable but now we will adjust stepper speed by user input only through FlexyStepper library functions
-  */
-#include <ESP_FlexyStepper.h>
+
+/* 
+  Stepper associated variables:
+  Number of steps per full length = 198720 steps
+                    fullLengthMM = 250 mm
+                    stepsPerMM32 = 0.0013 mm/step or 1.3 micrometers/step
+  To calculate the stepFactor take the microStep and divide by the max microStep (32) for example:
+      (32/microStep = stepFactor) this will allow us to adjust between alternate microStep settings in realtime
+      (32/2 = 16) (32/4 = 8) (32/8 = 4) (32/16 = 2) (32/32 = 1) dividing by 2 or 4 etc... reduces the number of steps since they will now be larger in distance
+      DERECIATED microStep was a user defined variable but now we will adjust stepper speed by user input only through FlexyStepper library functions
+*/
+
 int numSubdivisions = 10;//the number of segments to divide the X and Y axes into
 
 int microStep = 32;//this is the default microstep but can be changed by the client through the server
@@ -88,7 +145,7 @@ int joyY          = 0;
 int sennsitivity  = 10;
 
   //BLE
-#include <NimBLEDevice.h>
+
 #define SERVICE_UUID "d6d3eb5e-ddaf-492c-af4e-19323edf8fad"
 #define CMD_CHARACTERISTIC_UUID "c57884e4-fae7-4370-81cf-6b4919b28042"
 NimBLECharacteristic* pCharacteristic = nullptr;
@@ -101,7 +158,7 @@ uint32_t value = 0;
     commands will be populated with a series of text commands
       the sets of comands and delays etc... between commands
   */
-#include <experiments.h>
+
 ExperimentManager experimentManager;
 bool executingExperiments = false;
 int experimentID = 0;
@@ -110,10 +167,6 @@ int commandID = 0;
   //JSON for experiment read and write to SPIFFS
 JsonDocument doc;
 
-  /*
-    SPIFFS to open the JSON document in our SPIFFS
-  */
-#include <SPIFFS.h>
 
   // Parse JSON object
 void parseJSONtoExperiments()
@@ -208,7 +261,7 @@ void handleCommandSequence(String input)
   update_status(input);
   //the number of commands we have received is equal to the number of '.' occurences in the input string
   int numCommands = 0;
-  if(!input.contains('.')){return;}
+  if(input.indexOf(".") == -1){return;}
   for (int i = 0; i<input.length(); i++)
   {
     if(input[i] == '.')
@@ -447,7 +500,7 @@ void calibrate_pump()
   digitalWrite(PUMP_RELAY_PIN, HIGH);
 }
 
-void calibrate_pumpRate(String input)
+void calibrate_pump_rate(String input)
 {
   pumpRate = float(input.substring(input.indexOf(".")+1, input.length()).toFloat())/1000;
 }
@@ -593,7 +646,7 @@ void handle_input(String input)
     if(input == "down")                       {stepperY.startJogging(1);}                             //move y stepper in negative direction
     if(input == "pump1s")                     {calibrate_pump();}                                     //activate the pump for one second
     if(input.indexOf("volume")    == 0)       {pump_volume(input);}                                   //output volume of liquid using peristaltic pump
-    if(input.indexOf("calibrate") == 0)       {calibrate_pumpRate(input);}                            //calibrate pump rate in milliliters per second with user input
+    if(input.indexOf("calibrate") == 0)       {calibrate_pump_rate(input);}                           //calibrate pump rate in milliliters per second with user input
     if(input.indexOf("goX")       == 0)       {parseXY(input);}                                       //Parse string XY then go to position x, y
     if(input.indexOf("microstep") == 0)       {parseMicrostep(input);}                                //Update the microStep variable and all derivatives
     if(input.indexOf("speed")     == 0)       {updateSpeed(input);}                                   //set the speed in steps per second
