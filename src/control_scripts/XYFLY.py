@@ -27,9 +27,9 @@ async def main():
                     print("New data: ")
                     print(new_data)
                     if(new_data == data):
-                        print("Command already written to characterstic resetting...")
+                        print("Command already written to characteristic resetting...")
                         break
-                    print("Writing new data to charactersitic...")
+                    print("Writing new data to characterisitic...")
                     await client.write_gatt_char(characteristic_uuid, new_data)
 
 asyncio.run(main())
